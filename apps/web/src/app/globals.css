@@ -2,20 +2,113 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light Theme (Default) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light theme specific colors */
+  --light-bg: #FAF9F7;
+  --light-text: #1C1C1C;
+  --light-accent: #D4AF37;
+  --light-border: #E5E5E5;
+  --light-card: #FFFFFF;
+  
+  /* Semantic color mappings for light theme */
+  --background: var(--light-bg);
+  --foreground: var(--light-text);
+  --accent: var(--light-accent);
+  --border: var(--light-border);
+  --card: var(--light-card);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark Theme */
+.dark {
+  /* Dark theme specific colors */
+  --dark-bg: #121212;
+  --dark-text: #F5F5F5;
+  --dark-accent: #CBAF7A;
+  --dark-card: #1F1F1F;
+  --dark-border: #2A2A2A;
+  
+  /* Semantic color mappings for dark theme */
+  --background: var(--dark-bg);
+  --foreground: var(--dark-text);
+  --accent: var(--dark-accent);
+  --border: var(--dark-border);
+  --card: var(--dark-card);
 }
 
+/* McDonald's Theme (for the memes 🍟) */
+.mcdonalds {
+  /* McDonald's theme specific colors */
+  --mcd-bg: #FFD700; /* Golden yellow background */
+  --mcd-text: #C41E3A; /* McDonald's red text */
+  --mcd-accent: #C41E3A; /* McDonald's red */
+  --mcd-secondary: #FFD700; /* Golden yellow */
+  --mcd-card: #FFFFFF; /* White cards */
+  --mcd-border: #C41E3A; /* Red borders */
+  
+  /* Semantic color mappings for McDonald's theme */
+  --background: var(--mcd-bg);
+  --foreground: var(--mcd-text);
+  --accent: var(--mcd-accent);
+  --border: var(--mcd-border);
+  --card: var(--mcd-card);
+}
+
+/* Cyberpunk Theme (futuristic vibes 🤖) */
+.cyberpunk {
+  /* Cyberpunk theme specific colors */
+  --cyber-bg: #0A0A0A; /* Deep black background */
+  --cyber-text: #00FF41; /* Matrix green text */
+  --cyber-accent: #FF0080; /* Neon pink accent */
+  --cyber-secondary: #00FFFF; /* Cyan secondary */
+  --cyber-card: #1A1A1A; /* Dark cards */
+  --cyber-border: #00FF41; /* Green borders */
+  
+  /* Semantic color mappings for cyberpunk theme */
+  --background: var(--cyber-bg);
+  --foreground: var(--cyber-text);
+  --accent: var(--cyber-accent);
+  --border: var(--cyber-border);
+  --card: var(--cyber-card);
+}
+
+/* Base styles */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Utility classes for theme switching */
+.theme-light {
+  --background: var(--light-bg);
+  --foreground: var(--light-text);
+  --accent: var(--light-accent);
+  --border: var(--light-border);
+  --card: var(--light-card);
+}
+
+.theme-dark {
+  --background: var(--dark-bg);
+  --foreground: var(--dark-text);
+  --accent: var(--dark-accent);
+  --border: var(--dark-border);
+  --card: var(--dark-card);
+}
+
+.theme-mcdonalds {
+  --background: var(--mcd-bg);
+  --foreground: var(--mcd-text);
+  --accent: var(--mcd-accent);
+  --border: var(--mcd-border);
+  --card: var(--mcd-card);
+}
+
+.theme-cyberpunk {
+  --background: var(--cyber-bg);
+  --foreground: var(--cyber-text);
+  --accent: var(--cyber-accent);
+  --border: var(--cyber-border);
+  --card: var(--cyber-card);
 }
