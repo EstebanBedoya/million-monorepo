@@ -39,3 +39,18 @@ export interface PaginationDto {
   hasNext: boolean;
   hasPrev: boolean;
 }
+
+// Mock property interface for simplified frontend development
+export interface MockPropertyDto {
+  id: string;
+  idOwner: string;
+  name: string;
+  address: string;
+  price: number;
+  image: string;
+}
+
+export interface MockPropertyListDto {
+  properties: MockPropertyDto[];
+  pagination: PaginationDto;
+}
