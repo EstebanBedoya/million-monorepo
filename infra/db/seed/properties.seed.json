@@ -1,0 +1,80 @@
+[
+  {
+    "title": "Modern Apartment in Downtown",
+    "description": "Beautiful modern apartment with city views, perfect for young professionals.",
+    "price": 250000,
+    "currency": "USD",
+    "location": {
+      "address": "123 Main Street",
+      "city": "New York",
+      "state": "NY",
+      "country": "USA",
+      "coordinates": {
+        "lat": 40.7128,
+        "lng": -74.0060
+      }
+    },
+    "propertyType": "apartment",
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "area": 85,
+    "areaUnit": "m2",
+    "features": ["Balcony", "Parking", "Gym", "Pool"],
+    "images": ["https://example.com/image1.jpg"],
+    "status": "available",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  },
+  {
+    "title": "Family House with Garden",
+    "description": "Spacious family house with a beautiful garden, perfect for families.",
+    "price": 450000,
+    "currency": "USD",
+    "location": {
+      "address": "456 Oak Avenue",
+      "city": "Los Angeles",
+      "state": "CA",
+      "country": "USA",
+      "coordinates": {
+        "lat": 34.0522,
+        "lng": -118.2437
+      }
+    },
+    "propertyType": "house",
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "area": 200,
+    "areaUnit": "m2",
+    "features": ["Garden", "Garage", "Fireplace", "Swimming Pool"],
+    "images": ["https://example.com/image2.jpg"],
+    "status": "available",
+    "createdAt": "2024-01-16T10:00:00Z",
+    "updatedAt": "2024-01-16T10:00:00Z"
+  },
+  {
+    "title": "Commercial Office Space",
+    "description": "Prime commercial office space in business district, ideal for companies.",
+    "price": 800000,
+    "currency": "USD",
+    "location": {
+      "address": "789 Business Blvd",
+      "city": "Chicago",
+      "state": "IL",
+      "country": "USA",
+      "coordinates": {
+        "lat": 41.8781,
+        "lng": -87.6298
+      }
+    },
+    "propertyType": "commercial",
+    "bedrooms": 0,
+    "bathrooms": 2,
+    "area": 500,
+    "areaUnit": "m2",
+    "features": ["Parking", "Elevator", "Security", "Air Conditioning"],
+    "images": ["https://example.com/image3.jpg"],
+    "status": "available",
+    "createdAt": "2024-01-17T10:00:00Z",
+    "updatedAt": "2024-01-17T10:00:00Z"
+  }
+]
