@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { PropertiesPage } from '../presentation/pages/PropertiesPage';
 
 export default function Home() {
-  redirect('/theme-demo');
+  return <PropertiesPage />;
 }

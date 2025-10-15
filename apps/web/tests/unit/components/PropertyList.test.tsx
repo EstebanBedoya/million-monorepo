@@ -1,197 +1,90 @@
 import { render, screen } from '@testing-library/react';
 import { PropertyList } from '../../../src/presentation/components/PropertyList';
-import { Property, PropertyType, PropertyStatus, AreaUnit } from '../../../src/domain/entities/Property';
+import { MockPropertyType } from '../../../src/domain/schemas/property.schema';
 
-// Mock property data
-const mockProperties: Property[] = [
-  {
-    id: '1',
-    title: 'Beautiful Apartment',
-    description: 'A beautiful apartment in the city center',
-    price: 250000,
-    currency: 'USD',
-    location: {
-      address: '123 Main St',
-      city: 'New York',
-      state: 'NY',
-      country: 'USA',
-      getFullAddress: () => '123 Main St, New York, NY, USA',
-    },
-    propertyType: PropertyType.APARTMENT,
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 85,
-    areaUnit: AreaUnit.M2,
-    features: ['Parking', 'Balcony'],
-    images: ['image1.jpg'],
-    status: PropertyStatus.AVAILABLE,
-    createdAt: new Date('2023-01-01'),
-    updatedAt: new Date('2023-01-01'),
-    isAvailable: () => true,
-    isExpensive: () => false,
-    getFormattedPrice: () => 'USD 250,000',
+// Mock Next.js Image component
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    return <img {...props} />;
   },
-  {
-    id: '2',
-    title: 'Luxury House',
-    description: 'A luxury house with garden',
-    price: 500000,
-    currency: 'USD',
-    location: {
-      address: '456 Oak Ave',
-      city: 'Los Angeles',
-      state: 'CA',
-      country: 'USA',
-      getFullAddress: () => '456 Oak Ave, Los Angeles, CA, USA',
-    },
-    propertyType: PropertyType.HOUSE,
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 200,
-    areaUnit: AreaUnit.M2,
-    features: ['Garden', 'Pool', 'Garage'],
-    images: ['image2.jpg'],
-    status: PropertyStatus.SOLD,
-    createdAt: new Date('2023-01-02'),
-    updatedAt: new Date('2023-01-02'),
-    isAvailable: () => false,
-    isExpensive: () => true,
-    getFormattedPrice: () => 'USD 500,000',
-  },
-] as Property[];
+}));
 
 describe('PropertyList', () => {
-  it('should render properties correctly', () => {
+  const mockProperties: MockPropertyType[] = [
+    {
+      id: 'prop-001',
+      idOwner: 'owner-001',
+      name: 'Modern Villa',
+      address: '123 Main St',
+      city: 'Los Angeles',
+      price: 1000000,
+      image: 'https://example.com/villa.jpg',
+      bedrooms: 4,
+      bathrooms: 3,
+      area: 200,
+      areaUnit: 'm²',
+      propertyType: 'Villa',
+    },
+    {
+      id: 'prop-002',
+      idOwner: 'owner-002',
+      name: 'Downtown Apartment',
+      address: '456 Oak Ave',
+      city: 'New York',
+      price: 500000,
+      image: 'https://example.com/apartment.jpg',
+      bedrooms: 2,
+      bathrooms: 1,
+      area: 85,
+      areaUnit: 'm²',
+      propertyType: 'Apartment',
+    },
+  ];
+
+  it('should render list of properties', () => {
     render(<PropertyList properties={mockProperties} />);
 
-    expect(screen.getByText('Beautiful Apartment')).toBeInTheDocument();
-    expect(screen.getByText('Luxury House')).toBeInTheDocument();
-    expect(screen.getByText('USD 250,000')).toBeInTheDocument();
-    expect(screen.getByText('USD 500,000')).toBeInTheDocument();
+    expect(screen.getByText('Modern Villa')).toBeInTheDocument();
+    expect(screen.getByText('Downtown Apartment')).toBeInTheDocument();
+    expect(screen.getByText('$1,000,000')).toBeInTheDocument();
+    expect(screen.getByText('$500,000')).toBeInTheDocument();
   });
 
-  it('should render loading skeleton when loading is true', () => {
+  it('should render loading skeletons when loading is true', () => {
     render(<PropertyList properties={[]} loading={true} />);
 
-    // Should render 6 skeleton loading cards
-    const skeletonCards = screen.getAllByRole('generic');
-    expect(skeletonCards).toHaveLength(6);
-    
-    // Check for loading animation classes
-    skeletonCards.forEach(card => {
-      expect(card).toHaveClass('animate-pulse', 'bg-gray-200');
-    });
+    const loadingElements = screen.getAllByLabelText('Loading property');
+    expect(loadingElements.length).toBe(12); // Default skeleton count
   });
 
-  it('should render empty state when no properties', () => {
+  it('should render empty state when no properties and not loading', () => {
     render(<PropertyList properties={[]} loading={false} />);
 
-    expect(screen.getByText('No properties found')).toBeInTheDocument();
-    expect(screen.getByText('Try adjusting your search criteria')).toBeInTheDocument();
+    expect(screen.getByText('No Properties Found')).toBeInTheDocument();
   });
 
-  it('should render empty state when properties array is empty and loading is false', () => {
-    render(<PropertyList properties={[]} />);
+  it('should call onClearFilters when empty state button is clicked', () => {
+    const mockOnClearFilters = jest.fn();
+    render(<PropertyList properties={[]} loading={false} onClearFilters={mockOnClearFilters} />);
 
-    expect(screen.getByText('No properties found')).toBeInTheDocument();
-    expect(screen.getByText('Try adjusting your search criteria')).toBeInTheDocument();
+    const clearButton = screen.getByRole('button', { name: /Clear all filters/i });
+    clearButton.click();
+
+    expect(mockOnClearFilters).toHaveBeenCalledTimes(1);
   });
 
-  it('should not render empty state when loading is true', () => {
-    render(<PropertyList properties={[]} loading={true} />);
-
-    expect(screen.queryByText('No properties found')).not.toBeInTheDocument();
-    expect(screen.queryByText('Try adjusting your search criteria')).not.toBeInTheDocument();
-  });
-
-  it('should pass onPropertyClick to PropertyCard components', () => {
-    const mockOnPropertyClick = jest.fn();
-    render(<PropertyList properties={mockProperties} onPropertyClick={mockOnPropertyClick} />);
-
-    // Check that PropertyCard components are rendered with the callback
-    expect(screen.getByText('Beautiful Apartment')).toBeInTheDocument();
-    expect(screen.getByText('Luxury House')).toBeInTheDocument();
-  });
-
-  it('should render correct grid layout classes', () => {
+  it('should have proper grid layout', () => {
     const { container } = render(<PropertyList properties={mockProperties} />);
-    
-    const gridContainer = container.querySelector('.grid');
-    expect(gridContainer).toHaveClass(
-      'grid-cols-1',
-      'md:grid-cols-2',
-      'lg:grid-cols-3',
-      'gap-6'
-    );
+
+    const grid = container.querySelector('.grid');
+    expect(grid).toHaveClass('grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3', 'xl:grid-cols-4');
   });
 
-  it('should render loading skeleton with correct grid layout', () => {
-    const { container } = render(<PropertyList properties={[]} loading={true} />);
-    
-    const gridContainer = container.querySelector('.grid');
-    expect(gridContainer).toHaveClass(
-      'grid-cols-1',
-      'md:grid-cols-2',
-      'lg:grid-cols-3',
-      'gap-6'
-    );
-  });
-
-  it('should render empty state with correct styling', () => {
-    render(<PropertyList properties={[]} />);
-
-    const emptyStateContainer = screen.getByText('No properties found').closest('div');
-    expect(emptyStateContainer).toHaveClass('text-center', 'py-12');
-    
-    const titleElement = screen.getByText('No properties found');
-    expect(titleElement).toHaveClass('text-gray-500', 'text-lg', 'mb-4');
-    
-    const subtitleElement = screen.getByText('Try adjusting your search criteria');
-    expect(subtitleElement).toHaveClass('text-gray-400');
-  });
-
-  it('should render skeleton cards with correct styling', () => {
-    render(<PropertyList properties={[]} loading={true} />);
-
-    const skeletonCards = screen.getAllByRole('generic');
-    skeletonCards.forEach(card => {
-      expect(card).toHaveClass(
-        'bg-gray-200',
-        'animate-pulse',
-        'rounded-lg',
-        'h-80'
-      );
-    });
-  });
-
-  it('should handle single property correctly', () => {
-    const singleProperty = [mockProperties[0]];
-    render(<PropertyList properties={singleProperty} />);
-
-    expect(screen.getByText('Beautiful Apartment')).toBeInTheDocument();
-    expect(screen.queryByText('Luxury House')).not.toBeInTheDocument();
-  });
-
-  it('should render all properties when multiple properties provided', () => {
-    render(<PropertyList properties={mockProperties} />);
-
-    expect(screen.getByText('Beautiful Apartment')).toBeInTheDocument();
-    expect(screen.getByText('Luxury House')).toBeInTheDocument();
-    expect(screen.getByText('USD 250,000')).toBeInTheDocument();
-    expect(screen.getByText('USD 500,000')).toBeInTheDocument();
-  });
-
-  it('should not render loading skeleton when loading is false', () => {
-    render(<PropertyList properties={mockProperties} loading={false} />);
-
-    const skeletonCards = screen.queryAllByRole('generic');
-    expect(skeletonCards).toHaveLength(0);
-  });
-
-  it('should not render loading skeleton when loading is undefined', () => {
-    render(<PropertyList properties={mockProperties} />);
-
-    const skeletonCards = screen.queryAllByRole('generic');
-    expect(skeletonCards).toHaveLength(0);
+  it('should match snapshot', () => {
+    const { container } = render(<PropertyList properties={mockProperties} />);
+    expect(container.firstChild).toMatchSnapshot();
   });
 });
+

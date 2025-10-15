@@ -6,7 +6,7 @@ import { PropertyServiceImpl } from '../../application/services/PropertyServiceI
 // Dependency Injection Container - Simple implementation
 export class Container {
   private static instance: Container;
-  private services: Map<string, any> = new Map();
+  private services: Map<string, unknown> = new Map();
 
   private constructor() {
     this.initializeServices();

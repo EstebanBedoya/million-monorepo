@@ -1,140 +1,217 @@
 'use client';
 
-import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { Property } from '../../domain/entities/Property';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { MockPropertyType } from '../../domain/schemas/property.schema';
 import { PropertyList } from '../components/PropertyList';
-import { NotificationToast } from '../components/NotificationToast';
-import { useProperties } from '../hooks/useProperties';
-import { setSelectedProperty } from '../../store/slices/propertySlice';
+import { FiltersBar, FilterValues } from '../components/FiltersBar';
+import { Pagination } from '../components/Pagination';
+import { ThemeToggle } from '../components/ThemeToggle';
 
-export function PropertiesPage() {
-  const dispatch = useAppDispatch();
-  const selectedProperty = useAppSelector(state => state.properties.selectedProperty);
+interface PropertiesPageProps {
+  initialProperties?: MockPropertyType[];
+  initialPagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export function PropertiesPage({ 
+  initialProperties = [], 
+  initialPagination 
+}: PropertiesPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   
-  const { 
-    properties, 
-    loading, 
-    error, 
-    loadProperties, 
-    loadAvailableProperties, 
-    loadExpensiveProperties 
-  } = useProperties();
+  // State
+  const [properties, setProperties] = useState<MockPropertyType[]>(initialProperties);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState(initialPagination || {
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
 
-  const handlePropertyClick = (property: Property) => {
-    dispatch(setSelectedProperty(property));
-  };
+  // Get filters from URL
+  const getFiltersFromURL = useCallback((): FilterValues => {
+    return {
+      search: searchParams.get('search') || '',
+      minPrice: Number(searchParams.get('minPrice')) || 0,
+      maxPrice: Number(searchParams.get('maxPrice')) || 5000000,
+      propertyType: searchParams.get('propertyType') || '',
+    };
+  }, [searchParams]);
 
-  const handleFilterChange = (filter: string) => {
-    switch (filter) {
-      case 'all':
-        loadProperties();
-        break;
-      case 'available':
-        loadAvailableProperties();
-        break;
-      case 'expensive':
-        loadExpensiveProperties();
-        break;
-      default:
-        loadProperties();
+  const [filters, setFilters] = useState<FilterValues>(getFiltersFromURL());
+  const currentPage = Number(searchParams.get('page')) || 1;
+
+  // Update URL with filters
+  const updateURL = useCallback((newFilters: FilterValues, page: number = 1) => {
+    const params = new URLSearchParams();
+    
+    if (newFilters.search) params.set('search', newFilters.search);
+    if (newFilters.minPrice > 0) params.set('minPrice', newFilters.minPrice.toString());
+    if (newFilters.maxPrice < 5000000) params.set('maxPrice', newFilters.maxPrice.toString());
+    if (newFilters.propertyType) params.set('propertyType', newFilters.propertyType);
+    if (page > 1) params.set('page', page.toString());
+
+    router.push(`/?${params.toString()}`, { scroll: false });
+  }, [router]);
+
+  // Fetch properties
+  const fetchProperties = useCallback(async (filterValues: FilterValues, page: number) => {
+    setLoading(true);
+    
+    try {
+      const params = new URLSearchParams();
+      params.set('page', page.toString());
+      params.set('limit', '12');
+      
+      if (filterValues.search) params.set('search', filterValues.search);
+      if (filterValues.minPrice > 0) params.set('minPrice', filterValues.minPrice.toString());
+      if (filterValues.maxPrice < 5000000) params.set('maxPrice', filterValues.maxPrice.toString());
+
+      const response = await fetch(`/api/mock/properties?${params.toString()}`);
+      const data = await response.json();
+
+      setProperties(data.properties || []);
+      setPagination(data.pagination);
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      setProperties([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
+
+  // Handle filter changes
+  const handleFilterChange = useCallback((newFilters: FilterValues) => {
+    setFilters(newFilters);
+    updateURL(newFilters, 1);
+    fetchProperties(newFilters, 1);
+  }, [updateURL, fetchProperties]);
+
+  // Handle page changes
+  const handlePageChange = useCallback((page: number) => {
+    updateURL(filters, page);
+    fetchProperties(filters, page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [filters, updateURL, fetchProperties]);
+
+  // Handle clear filters
+  const handleClearFilters = useCallback(() => {
+    const defaultFilters: FilterValues = {
+      search: '',
+      minPrice: 0,
+      maxPrice: 5000000,
+      propertyType: '',
+    };
+    setFilters(defaultFilters);
+    updateURL(defaultFilters, 1);
+    fetchProperties(defaultFilters, 1);
+  }, [updateURL, fetchProperties]);
+
+  // Initial load from URL params
+  useEffect(() => {
+    const urlFilters = getFiltersFromURL();
+    const page = Number(searchParams.get('page')) || 1;
+    
+    setFilters(urlFilters);
+    fetchProperties(urlFilters, page);
+  }, []); // Only run on mount
+
+  // Memoized filtered properties (for client-side additional filtering if needed)
+  const displayedProperties = useMemo(() => {
+    let filtered = [...properties];
+
+    // Additional client-side filtering by property type if needed
+    if (filters.propertyType) {
+      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+    }
+
+    return filtered;
+  }, [properties, filters.propertyType]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NotificationToast />
+    <div className="min-h-screen bg-background">
+      {/* Theme Toggle */}
+      <ThemeToggle />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Properties - Redux + Clean Architecture
-          </h1>
-          
-          <div className="flex gap-4 mb-6">
-            <button
-              onClick={() => handleFilterChange('all')}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              All Properties
-            </button>
-            <button
-              onClick={() => handleFilterChange('available')}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-            >
-              Available Only
-            </button>
-            <button
-              onClick={() => handleFilterChange('expensive')}
-              className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
-            >
-              Expensive Properties
-            </button>
+      {/* Header */}
+      <header className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold text-foreground mb-3">
+              ESTATELY
+            </h1>
+            <p className="text-xl text-accent mb-2">
+              Find Your Dream Home
+            </p>
+            <p className="text-secondary max-w-2xl mx-auto">
+              Discover exceptional properties with elegant design and unparalleled luxury
+            </p>
           </div>
         </div>
+      </header>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            Error: {error}
-          </div>
-        )}
-
-        <PropertyList
-          properties={properties}
-          onPropertyClick={handlePropertyClick}
-          loading={loading}
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters */}
+        <FiltersBar 
+          onFilterChange={handleFilterChange}
+          defaultFilters={filters}
         />
 
-        {selectedProperty && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-96 overflow-y-auto">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {selectedProperty.title}
-                </h2>
-                <button
-                  onClick={() => dispatch(setSelectedProperty(null))}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Description</h3>
-                  <p className="text-gray-700">{selectedProperty.description}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900">Location</h3>
-                  <p className="text-gray-700">{selectedProperty.location.getFullAddress()}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900">Price</h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    {selectedProperty.getFormattedPrice()}
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900">Features</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProperty.features.map((feature, index) => (
-                      <span
-                        key={index}
-                        className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
-                      >
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Results count */}
+        {!loading && (
+          <div className="mb-6">
+            <p className="text-sm text-secondary">
+              {pagination.total > 0 ? (
+                <>
+                  Showing <span className="font-medium text-foreground">{properties.length}</span> of{' '}
+                  <span className="font-medium text-foreground">{pagination.total}</span> properties
+                </>
+              ) : (
+                'No properties found'
+              )}
+            </p>
           </div>
         )}
-      </div>
+
+        {/* Property list */}
+        <PropertyList 
+          properties={displayedProperties}
+          loading={loading}
+          onClearFilters={handleClearFilters}
+        />
+
+        {/* Pagination */}
+        {!loading && properties.length > 0 && (
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+            hasNext={pagination.hasNext}
+            hasPrev={pagination.hasPrev}
+          />
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-card border-t border-border mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center text-sm text-secondary">
+            <p>© 2025 ESTATELY. Luxury Real Estate Platform.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

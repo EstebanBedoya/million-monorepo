@@ -55,8 +55,14 @@ export const MockPropertySchema = z.object({
   idOwner: z.string(),
   name: z.string(),
   address: z.string(),
+  city: z.string(),
   price: z.number(),
   image: z.string(),
+  bedrooms: z.number().optional(),
+  bathrooms: z.number().optional(),
+  area: z.number().optional(),
+  areaUnit: z.enum(['m²', 'sqft']).optional(),
+  propertyType: z.enum(['House', 'Apartment', 'Villa', 'Condo', 'Townhouse', 'Studio']).optional(),
 });
 
 export const MockPropertyListSchema = z.array(MockPropertySchema);

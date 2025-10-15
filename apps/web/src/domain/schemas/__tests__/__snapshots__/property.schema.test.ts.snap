@@ -1,0 +1,100 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Property Schema Contract Tests Contract Snapshots should match property contract snapshot 1`] = `
+{
+  "address": "999 Snapshot Lane",
+  "area": 200,
+  "areaUnit": "m²",
+  "bathrooms": 3,
+  "bedrooms": 4,
+  "city": "Snapshot City",
+  "id": "snap-001",
+  "idOwner": "owner-snap-001",
+  "image": "https://example.com/snapshot.jpg",
+  "name": "Snapshot Test Property",
+  "price": 999999,
+  "propertyType": "Villa",
+}
+`;
+
+exports[`Property Schema Contract Tests Contract Snapshots should match property list contract snapshot 1`] = `
+[
+  {
+    "address": "100 List Ave",
+    "city": "List City",
+    "id": "snap-list-001",
+    "idOwner": "owner-snap-001",
+    "image": "https://example.com/list1.jpg",
+    "name": "List Property 1",
+    "price": 100000,
+  },
+  {
+    "address": "200 List Ave",
+    "bathrooms": 1,
+    "bedrooms": 2,
+    "city": "List City",
+    "id": "snap-list-002",
+    "idOwner": "owner-snap-002",
+    "image": "https://example.com/list2.jpg",
+    "name": "List Property 2",
+    "price": 200000,
+  },
+]
+`;
+
+exports[`Property Schema Contract Tests MockPropertyListSchema should validate an array of properties 1`] = `
+[
+  {
+    "address": "123 Main St",
+    "city": "City1",
+    "id": "prop-001",
+    "idOwner": "owner-001",
+    "image": "https://example.com/1.jpg",
+    "name": "Property 1",
+    "price": 500000,
+  },
+  {
+    "address": "456 Oak Ave",
+    "area": 150,
+    "areaUnit": "m²",
+    "bathrooms": 2,
+    "bedrooms": 3,
+    "city": "City2",
+    "id": "prop-002",
+    "idOwner": "owner-002",
+    "image": "https://example.com/2.jpg",
+    "name": "Property 2",
+    "price": 750000,
+    "propertyType": "House",
+  },
+]
+`;
+
+exports[`Property Schema Contract Tests MockPropertySchema should validate a complete property object 1`] = `
+{
+  "address": "1247 Sunset Boulevard",
+  "area": 84,
+  "areaUnit": "m²",
+  "bathrooms": 4,
+  "bedrooms": 5,
+  "city": "Los Angeles",
+  "id": "prop-001",
+  "idOwner": "owner-001",
+  "image": "https://example.com/image.jpg",
+  "name": "Modern Luxury Villa",
+  "price": 2800000,
+  "propertyType": "Villa",
+}
+`;
+
+exports[`Property Schema Contract Tests MockPropertySchema should validate a minimal property object (without optional fields) 1`] = `
+{
+  "address": "456 Park Avenue",
+  "city": "New York",
+  "id": "prop-002",
+  "idOwner": "owner-002",
+  "image": "https://example.com/apartment.jpg",
+  "name": "Downtown Apartment",
+  "price": 1200000,
+}
+`;

@@ -1,4 +1,4 @@
-import { PropertyService } from '../interfaces/PropertyService';
+import { PropertyService, CreatePropertyData } from '../interfaces/PropertyService';
 import { Property } from '../../domain/entities/Property';
 import { PaginatedResult } from '../../domain/repositories/PropertyRepository';
 import { GetPropertyUseCase } from '../use-cases/GetPropertyUseCase';
@@ -26,7 +26,7 @@ export class PropertyServiceImpl implements PropertyService {
     return await this.getAllPropertiesUseCase.execute({ page, limit });
   }
 
-  async createProperty(propertyData: any): Promise<Property> {
+  async createProperty(propertyData: CreatePropertyData): Promise<Property> {
     return await this.createPropertyUseCase.execute(propertyData);
   }
 

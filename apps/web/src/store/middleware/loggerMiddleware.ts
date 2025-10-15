@@ -2,7 +2,7 @@ import { Middleware } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 
 // Logger middleware for development
-export const loggerMiddleware: Middleware<{}, RootState> = (store) => (next) => (action) => {
+export const loggerMiddleware: Middleware<object, RootState> = (store) => (next) => (action) => {
   if (process.env.NODE_ENV === 'development') {
     console.group(`Redux Action: ${action.type}`);
     console.log('Previous State:', store.getState());

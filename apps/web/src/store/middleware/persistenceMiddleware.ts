@@ -2,7 +2,7 @@ import { Middleware } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 
 // Persistence middleware for localStorage
-export const persistenceMiddleware: Middleware<{}, RootState> = (store) => (next) => (action) => {
+export const persistenceMiddleware: Middleware<object, RootState> = (store) => (next) => (action) => {
   const result = next(action);
   
   // Save to localStorage on specific actions

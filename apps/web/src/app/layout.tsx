@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "../providers/ReduxProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Properties App - Clean Architecture + Redux",
-  description: "Real estate application built with Clean Architecture and Redux",
+  title: "ESTATELY - Find Your Dream Home",
+  description: "Discover luxury real estate properties with elegant design and exceptional service",
 };
 
 export default function RootLayout({
@@ -26,7 +30,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${playfair.variable} ${inter.variable} antialiased`}
+        style={{ fontFamily: 'var(--font-playfair)' }}
       >
         <ReduxProvider>
           {children}

@@ -3,7 +3,7 @@ import { RootState } from '../index';
 import { addNotification } from '../slices/uiSlice';
 
 // Custom middleware for property operations
-export const propertyMiddleware: Middleware<{}, RootState> = (store) => (next) => (action) => {
+export const propertyMiddleware: Middleware<object, RootState> = (store) => (next) => (action) => {
   const result = next(action);
 
   // Handle property operation notifications

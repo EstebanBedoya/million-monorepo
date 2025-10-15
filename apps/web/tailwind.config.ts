@@ -5,6 +5,7 @@ const config: Config = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/presentation/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   darkMode: 'class',
   theme: {
@@ -46,9 +47,11 @@ const config: Config = {
         accent: 'var(--accent)',
         border: 'var(--border)',
         card: 'var(--card)',
+        secondary: 'var(--secondary)',
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'Arial', 'Helvetica', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', 'Arial', 'Helvetica', 'sans-serif'],
+        serif: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif'],
         mono: ['var(--font-geist-mono)', 'monospace'],
       },
       boxShadow: {

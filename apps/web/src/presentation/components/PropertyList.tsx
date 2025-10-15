@@ -1,42 +1,44 @@
 'use client';
 
-import { Property } from '../../domain/entities/Property';
+import { MockPropertyType } from '../../domain/schemas/property.schema';
 import { PropertyCard } from './PropertyCard';
+import { PropertyListSkeleton } from './PropertyCardSkeleton';
+import { EmptyState } from './EmptyState';
 
 interface PropertyListProps {
-  properties: Property[];
-  onPropertyClick?: (property: Property) => void;
+  properties: MockPropertyType[];
+  onPropertyClick?: (property: MockPropertyType) => void;
   loading?: boolean;
+  onClearFilters?: () => void;
 }
 
-export function PropertyList({ properties, onPropertyClick, loading }: PropertyListProps) {
+export function PropertyList({ 
+  properties, 
+  onPropertyClick, 
+  loading,
+  onClearFilters 
+}: PropertyListProps) {
   if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="bg-gray-200 animate-pulse rounded-lg h-80"></div>
-        ))}
-      </div>
-    );
+    return <PropertyListSkeleton count={12} />;
   }
 
   if (properties.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-500 text-lg mb-4">No properties found</div>
-        <p className="text-gray-400">Try adjusting your search criteria</p>
-      </div>
-    );
+    return <EmptyState onReset={onClearFilters} />;
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div 
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      role="list"
+      aria-label="Properties list"
+    >
       {properties.map((property) => (
-        <PropertyCard
-          key={property.id}
-          property={property}
-          onViewDetails={onPropertyClick}
-        />
+        <div key={property.id} role="listitem">
+          <PropertyCard
+            property={property}
+            onViewDetails={onPropertyClick}
+          />
+        </div>
       ))}
     </div>
   );

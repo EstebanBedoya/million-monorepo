@@ -46,8 +46,14 @@ export interface MockPropertyDto {
   idOwner: string;
   name: string;
   address: string;
+  city: string;
   price: number;
   image: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  areaUnit?: 'm²' | 'sqft';
+  propertyType?: 'House' | 'Apartment' | 'Villa' | 'Condo' | 'Townhouse' | 'Studio';
 }
 
 export interface MockPropertyListDto {

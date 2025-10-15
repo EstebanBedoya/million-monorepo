@@ -2,38 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light Theme (Default) */
+/* ESTATELY - Elegant Real Estate Theme */
+
+/* Light Theme (Default) - Warm, elegant tones */
 :root {
-  /* Light theme specific colors */
+  /* Light theme specific colors - inspired by luxury real estate */
   --light-bg: #FAF9F7;
-  --light-text: #1C1C1C;
-  --light-accent: #D4AF37;
-  --light-border: #E5E5E5;
+  --light-text: #2A2621;
+  --light-accent: #C9A961;
+  --light-accent-hover: #B89850;
+  --light-border: #E8E6E1;
   --light-card: #FFFFFF;
+  --light-secondary: #6B6661;
+  --light-shadow: rgba(42, 38, 33, 0.08);
   
   /* Semantic color mappings for light theme */
   --background: var(--light-bg);
   --foreground: var(--light-text);
   --accent: var(--light-accent);
+  --accent-hover: var(--light-accent-hover);
   --border: var(--light-border);
   --card: var(--light-card);
+  --secondary: var(--light-secondary);
+  --shadow: var(--light-shadow);
 }
 
-/* Dark Theme */
+/* Dark Theme - Sophisticated dark with warm accents */
 .dark {
-  /* Dark theme specific colors */
-  --dark-bg: #121212;
-  --dark-text: #F5F5F5;
-  --dark-accent: #CBAF7A;
-  --dark-card: #1F1F1F;
-  --dark-border: #2A2A2A;
+  /* Dark theme specific colors - elegant night mode */
+  --dark-bg: #0F0F0F;
+  --dark-text: #E8E6E1;
+  --dark-accent: #D4AF6A;
+  --dark-accent-hover: #E5C07B;
+  --dark-card: #1A1916;
+  --dark-border: #2D2A26;
+  --dark-secondary: #9B9791;
+  --dark-shadow: rgba(0, 0, 0, 0.3);
   
   /* Semantic color mappings for dark theme */
   --background: var(--dark-bg);
   --foreground: var(--dark-text);
   --accent: var(--dark-accent);
+  --accent-hover: var(--dark-accent-hover);
   --border: var(--dark-border);
   --card: var(--dark-card);
+  --secondary: var(--dark-secondary);
+  --shadow: var(--dark-shadow);
 }
 
 /* McDonald's Theme (for the memes 🍟) */
@@ -73,11 +87,58 @@
 }
 
 /* Base styles */
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: 'Playfair Display', 'Georgia', serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', 'Georgia', serif;
+    font-weight: 600;
+  }
+
+  input, button, select {
+    font-family: 'Inter', 'Arial', sans-serif;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-accent text-white rounded-md font-medium 
+           transition-all duration-200 hover:bg-[var(--accent-hover)] 
+           focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2
+           shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 border border-border bg-card text-foreground rounded-md 
+           font-medium transition-all duration-200 hover:border-accent 
+           focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-card border border-border rounded-md
+           text-foreground placeholder:text-secondary
+           transition-all duration-200
+           focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+  }
+
+  .card-elevated {
+    @apply bg-card border border-border rounded-lg 
+           shadow-[0_2px_8px_var(--shadow)] 
+           hover:shadow-[0_4px_16px_var(--shadow)]
+           transition-shadow duration-300;
+  }
 }
 
 /* Utility classes for theme switching */

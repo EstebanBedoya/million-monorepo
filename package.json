@@ -13,10 +13,12 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
-    "type-check": "turbo run type-check"
+    "type-check": "turbo run type-check",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
+    "husky": "^9.1.7",
     "turbo": "^1.10.12",
     "typescript": "^5.2.2"
   },

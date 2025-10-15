@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run linting and type checking
+echo "🔍 Running pre-commit checks..."
+pnpm run lint
+echo "✅ Pre-commit checks passed!"
