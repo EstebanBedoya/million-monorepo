@@ -1,5 +1,8 @@
 'use client';
 
+import { PageButton } from '../molecules/PageButton';
+import { PageNumberButton } from '../molecules/PageNumberButton';
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -59,28 +62,11 @@ export function Pagination({
   return (
     <nav className="flex items-center justify-center gap-2 mt-8" role="navigation" aria-label="Pagination">
       {/* Previous button */}
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
+      <PageButton
+        direction="prev"
         disabled={!hasPrev}
-        className={`
-          px-4 py-2 rounded-md font-medium transition-all duration-200
-          ${hasPrev 
-            ? 'bg-card border border-border text-foreground hover:border-accent hover:text-accent' 
-            : 'bg-secondary/10 text-secondary cursor-not-allowed'
-          }
-        `}
-        aria-label="Previous page"
-      >
-        <svg 
-          className="w-5 h-5" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
+        onClick={() => onPageChange(currentPage - 1)}
+      />
 
       {/* Page numbers */}
       <div className="flex items-center gap-1">
@@ -101,49 +87,22 @@ export function Pagination({
           const isActive = pageNumber === currentPage;
 
           return (
-            <button
+            <PageNumberButton
               key={pageNumber}
+              page={pageNumber}
+              isActive={isActive}
               onClick={() => onPageChange(pageNumber)}
-              className={`
-                px-4 py-2 rounded-md font-medium transition-all duration-200
-                ${isActive
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'bg-card border border-border text-foreground hover:border-accent hover:text-accent'
-                }
-              `}
-              aria-label={`Page ${pageNumber}`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {pageNumber}
-            </button>
+            />
           );
         })}
       </div>
 
       {/* Next button */}
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
+      <PageButton
+        direction="next"
         disabled={!hasNext}
-        className={`
-          px-4 py-2 rounded-md font-medium transition-all duration-200
-          ${hasNext 
-            ? 'bg-card border border-border text-foreground hover:border-accent hover:text-accent' 
-            : 'bg-secondary/10 text-secondary cursor-not-allowed'
-          }
-        `}
-        aria-label="Next page"
-      >
-        <svg 
-          className="w-5 h-5" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
+        onClick={() => onPageChange(currentPage + 1)}
+      />
     </nav>
   );
 }
-

@@ -1,6 +1,19 @@
 import { render, screen } from '@testing-library/react';
-import { PropertyCard } from '../../../src/presentation/components/PropertyCard';
+import { PropertyCard } from '../../../src/presentation/components/organisms/PropertyCard';
 import { MockPropertyType } from '../../../src/domain/schemas/property.schema';
+
+const mockPush = jest.fn();
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  }),
+}));
 
 // Mock Next.js Image component
 jest.mock('next/image', () => ({
@@ -78,11 +91,11 @@ describe('PropertyCard', () => {
     expect(handleViewDetails).toHaveBeenCalledWith(mockProperty);
   });
 
-  it('should not render View Details button when onViewDetails is not provided', () => {
+  it('should render View Details button', () => {
     render(<PropertyCard property={mockProperty} />);
 
-    const button = screen.queryByRole('button', { name: /View details/i });
-    expect(button).not.toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /View details/i });
+    expect(button).toBeInTheDocument();
   });
 
   it('should have proper accessibility attributes', () => {

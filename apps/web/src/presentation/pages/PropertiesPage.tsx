@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MockPropertyType } from '../../domain/schemas/property.schema';
 import { PropertyList } from '../components/PropertyList';
-import { FiltersBar, FilterValues } from '../components/FiltersBar';
-import { Pagination } from '../components/Pagination';
-import { ThemeToggle } from '../components/ThemeToggle';
+import { Sidebar } from '../components/organisms/Sidebar';
+import { Pagination } from '../components/organisms/Pagination';
+import { ThemeToggle } from '../components/molecules/ThemeToggle';
+import { FilterValues } from '../components/organisms/FiltersBar';
 
 interface PropertiesPageProps {
   initialProperties?: MockPropertyType[];
@@ -30,6 +31,7 @@ export function PropertiesPage({
   // State
   const [properties, setProperties] = useState<MockPropertyType[]>(initialProperties);
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pagination, setPagination] = useState(initialPagination || {
     page: 1,
     limit: 12,
@@ -50,7 +52,19 @@ export function PropertiesPage({
   }, [searchParams]);
 
   const [filters, setFilters] = useState<FilterValues>(getFiltersFromURL());
-  const currentPage = Number(searchParams.get('page')) || 1;
+
+  // Use refs to avoid dependency issues
+  const filtersRef = useRef(filters);
+  const routerRef = useRef(router);
+
+  // Update refs when values change
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
 
   // Update URL with filters
   const updateURL = useCallback((newFilters: FilterValues, page: number = 1) => {
@@ -62,8 +76,8 @@ export function PropertiesPage({
     if (newFilters.propertyType) params.set('propertyType', newFilters.propertyType);
     if (page > 1) params.set('page', page.toString());
 
-    router.push(`/?${params.toString()}`, { scroll: false });
-  }, [router]);
+    routerRef.current.push(`/?${params.toString()}`, { scroll: false });
+  }, []);
 
   // Fetch properties
   const fetchProperties = useCallback(async (filterValues: FilterValues, page: number) => {
@@ -96,14 +110,14 @@ export function PropertiesPage({
     setFilters(newFilters);
     updateURL(newFilters, 1);
     fetchProperties(newFilters, 1);
-  }, [updateURL, fetchProperties]);
+  }, []);
 
   // Handle page changes
   const handlePageChange = useCallback((page: number) => {
-    updateURL(filters, page);
-    fetchProperties(filters, page);
+    updateURL(filtersRef.current, page);
+    fetchProperties(filtersRef.current, page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [filters, updateURL, fetchProperties]);
+  }, []);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -116,7 +130,7 @@ export function PropertiesPage({
     setFilters(defaultFilters);
     updateURL(defaultFilters, 1);
     fetchProperties(defaultFilters, 1);
-  }, [updateURL, fetchProperties]);
+  }, []);
 
   // Initial load from URL params
   useEffect(() => {
@@ -125,6 +139,7 @@ export function PropertiesPage({
     
     setFilters(urlFilters);
     fetchProperties(urlFilters, page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
   // Memoized filtered properties (for client-side additional filtering if needed)
@@ -140,7 +155,7 @@ export function PropertiesPage({
   }, [properties, filters.propertyType]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Theme Toggle */}
       <ThemeToggle />
       
@@ -161,51 +176,74 @@ export function PropertiesPage({
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters */}
-        <FiltersBar 
+      {/* Main layout with sidebar */}
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <Sidebar
           onFilterChange={handleFilterChange}
           defaultFilters={filters}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          onClose={() => setSidebarOpen(false)}
         />
 
-        {/* Results count */}
-        {!loading && (
-          <div className="mb-6">
-            <p className="text-sm text-secondary">
-              {pagination.total > 0 ? (
-                <>
-                  Showing <span className="font-medium text-foreground">{properties.length}</span> of{' '}
-                  <span className="font-medium text-foreground">{pagination.total}</span> properties
-                </>
-              ) : (
-                'No properties found'
-              )}
-            </p>
+        {/* Main content area */}
+        <main className="flex-1 lg:ml-0">
+          <div className="p-4 sm:p-6 lg:p-8">
+            {/* Mobile filter toggle button */}
+            <div className="lg:hidden mb-6">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                </svg>
+                Filters
+              </button>
+            </div>
+
+            {/* Results count */}
+            {!loading && (
+              <div className="mb-6">
+                <p className="text-sm text-secondary">
+                  {pagination.total > 0 ? (
+                    <>
+                      Showing <span className="font-medium text-foreground">{properties.length}</span> of{' '}
+                      <span className="font-medium text-foreground">{pagination.total}</span> properties
+                    </>
+                  ) : (
+                    'No properties found'
+                  )}
+                </p>
+              </div>
+            )}
+
+            {/* Property list */}
+            <PropertyList 
+              properties={displayedProperties}
+              loading={loading}
+              onClearFilters={handleClearFilters}
+            />
+
+            {/* Pagination */}
+            {!loading && properties.length > 0 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.totalPages}
+                  onPageChange={handlePageChange}
+                  hasNext={pagination.hasNext}
+                  hasPrev={pagination.hasPrev}
+                />
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Property list */}
-        <PropertyList 
-          properties={displayedProperties}
-          loading={loading}
-          onClearFilters={handleClearFilters}
-        />
-
-        {/* Pagination */}
-        {!loading && properties.length > 0 && (
-          <Pagination
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-            hasNext={pagination.hasNext}
-            hasPrev={pagination.hasPrev}
-          />
-        )}
-      </main>
+        </main>
+      </div>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border mt-16">
+      <footer className="bg-card border-t border-border mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-sm text-secondary">
             <p>© 2025 ESTATELY. Luxury Real Estate Platform.</p>

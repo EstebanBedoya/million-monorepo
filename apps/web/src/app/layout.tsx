@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Cinzel, Cairo } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "../providers/ReduxProvider";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const cairo = Cairo({
+  variable: "--font-cairo",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -30,8 +30,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${playfair.variable} ${inter.variable} antialiased`}
-        style={{ fontFamily: 'var(--font-playfair)' }}
+        className={`${cinzel.variable} ${cairo.variable} antialiased`}
+        style={{ fontFamily: 'var(--font-cinzel)' }}
       >
         <ReduxProvider>
           {children}
