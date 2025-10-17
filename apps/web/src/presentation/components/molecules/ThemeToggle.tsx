@@ -26,9 +26,9 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
     >
       {theme === 'light' ? (
-        <Icon icon={Moon} size="lg" aria-hidden="true" />
+        <Icon icon={Moon} size="lg" aria-hidden={true} />
       ) : (
-        <Icon icon={Sun} size="lg" aria-hidden="true" />
+        <Icon icon={Sun} size="lg" aria-hidden={true} />
       )}
     </Button>
   );

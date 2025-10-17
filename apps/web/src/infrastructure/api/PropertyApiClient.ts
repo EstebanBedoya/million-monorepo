@@ -1,58 +1,88 @@
-import { PropertyDto } from '../../../../shared/contracts/property.dto';
+import { PropertyDto } from '../../../../../shared/contracts/property.dto';
+import { HttpClient, RequestConfig } from '../http/HttpClient';
 
-// API Client for external API calls
+export interface PropertyApiFilters {
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  propertyType?: string;
+  status?: string;
+  city?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+}
+
+export interface PropertyApiPagination {
+  page: number;
+  limit: number;
+}
+
+export interface PropertyApiResponse {
+  properties: PropertyDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+// API Client for external API calls using HttpClient
 export class PropertyApiClient {
-  private baseUrl: string;
+  private httpClient: HttpClient;
 
-  constructor(baseUrl: string = 'http://localhost:3001/api') {
-    this.baseUrl = baseUrl;
+  constructor(httpClient: HttpClient) {
+    this.httpClient = httpClient;
   }
 
-  async fetchProperties(): Promise<PropertyDto[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/properties`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return data.properties || [];
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-      return [];
-    }
+  async fetchProperties(
+    filters: PropertyApiFilters = {},
+    pagination: PropertyApiPagination = { page: 1, limit: 12 }
+  ): Promise<PropertyApiResponse> {
+    const params = new URLSearchParams();
+    
+    // Add pagination params
+    params.set('page', pagination.page.toString());
+    params.set('limit', pagination.limit.toString());
+    
+    // Add filter params
+    if (filters.search) params.set('search', filters.search);
+    if (filters.minPrice) params.set('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice.toString());
+    if (filters.propertyType) params.set('propertyType', filters.propertyType);
+    if (filters.status) params.set('status', filters.status);
+    if (filters.city) params.set('city', filters.city);
+    if (filters.bedrooms) params.set('bedrooms', filters.bedrooms.toString());
+    if (filters.bathrooms) params.set('bathrooms', filters.bathrooms.toString());
+
+    const config: RequestConfig = {
+      retry: true,
+      skipLogging: false,
+    };
+
+    return await this.httpClient.get<PropertyApiResponse>(
+      `/properties?${params.toString()}`,
+      config
+    );
   }
 
-  async fetchPropertyById(id: string): Promise<PropertyDto | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/properties/${id}`);
-      if (!response.ok) {
-        return null;
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching property:', error);
-      return null;
-    }
+  async fetchPropertyById(id: string): Promise<PropertyDto> {
+    const config: RequestConfig = {
+      retry: true,
+      skipLogging: false,
+    };
+
+    return await this.httpClient.get<PropertyDto>(`/properties/${id}`, config);
   }
 
-  async createProperty(propertyData: Partial<PropertyDto>): Promise<PropertyDto | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/properties`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(propertyData),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating property:', error);
-      return null;
-    }
+  async createProperty(propertyData: Partial<PropertyDto>): Promise<PropertyDto> {
+    const config: RequestConfig = {
+      retry: false, // Don't retry POST requests
+      skipLogging: false,
+    };
+
+    return await this.httpClient.post<PropertyDto>('/properties', propertyData, config);
   }
 }

@@ -31,7 +31,7 @@ export function Spinner({
         icon={Loader2} 
         size={size}
         className={`animate-spin text-primary ${sizeClasses[size]}`}
-        aria-hidden="true"
+        aria-hidden={true}
       />
       <span className="sr-only">{label}</span>
     </div>

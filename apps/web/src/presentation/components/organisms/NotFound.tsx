@@ -23,9 +23,9 @@ export const NotFound = ({
           <div className="w-24 h-24 rounded-full bg-secondary/10 flex items-center justify-center">
             <Icon 
               icon={Search} 
-              size="2xl" 
+              size="xl" 
               className="text-secondary"
-              aria-hidden="true"
+              aria-hidden={true}
             />
           </div>
         </div>

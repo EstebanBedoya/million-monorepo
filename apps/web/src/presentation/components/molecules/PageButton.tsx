@@ -24,7 +24,7 @@ export const PageButton = ({ direction, disabled, onClick, className }: PageButt
       className={className}
       aria-label={label}
     >
-      <Icon icon={IconComponent} size="md" aria-hidden="true" />
+      <Icon icon={IconComponent} size="md" aria-hidden={true} />
     </Button>
   );
 };

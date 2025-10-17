@@ -43,7 +43,7 @@ export function ErrorState({
           icon={AlertTriangle} 
           size="xl" 
           className="text-destructive"
-          aria-hidden="true"
+          aria-hidden={true}
         />
       </div>
 
@@ -72,7 +72,7 @@ export function ErrorState({
       {onRetry && (
         <Button
           onClick={onRetry}
-          variant="default"
+          variant="primary"
           size="lg"
           className="gap-2"
           aria-label="Retry loading properties"

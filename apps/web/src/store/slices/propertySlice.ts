@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Property } from '../../domain/entities/Property';
-import { PropertyService } from '../../application/interfaces/PropertyService';
+import { PropertyService, CreatePropertyData } from '../../application/interfaces/PropertyService';
 import { Container } from '../../infrastructure/di/Container';
 
 // Async thunks for property operations
@@ -42,7 +42,7 @@ export const fetchPropertyById = createAsyncThunk(
 
 export const createProperty = createAsyncThunk(
   'properties/createProperty',
-  async (propertyData: any) => {
+  async (propertyData: CreatePropertyData) => {
     const container = Container.getInstance();
     const propertyService = container.get<PropertyService>('PropertyService');
     return await propertyService.createProperty(propertyData);

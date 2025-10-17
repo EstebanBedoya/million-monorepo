@@ -1,15 +1,24 @@
 import { Middleware } from '@reduxjs/toolkit';
-import { RootState } from '../index';
 import { addNotification } from '../slices/uiSlice';
 
+// Type guard for actions with type property
+const isActionWithType = (action: unknown): action is { type: string; error?: { message?: string } } => {
+  return (
+    typeof action === 'object' &&
+    action !== null &&
+    'type' in action &&
+    typeof (action as Record<string, unknown>).type === 'string'
+  );
+};
+
 // Custom middleware for property operations
-export const propertyMiddleware: Middleware<object, RootState> = (store) => (next) => (action) => {
+export const propertyMiddleware: Middleware = (store) => (next) => (action: unknown) => {
   const result = next(action);
 
   // Handle property operation notifications
-  if (action.type.startsWith('properties/')) {
+  if (isActionWithType(action) && action.type.startsWith('properties/')) {
     const state = store.getState();
-    
+
     // Success notifications
     if (action.type.endsWith('/fulfilled')) {
       if (action.type.includes('fetchProperties')) {
@@ -24,7 +33,7 @@ export const propertyMiddleware: Middleware<object, RootState> = (store) => (nex
         }));
       }
     }
-    
+
     // Error notifications
     if (action.type.endsWith('/rejected')) {
       store.dispatch(addNotification({

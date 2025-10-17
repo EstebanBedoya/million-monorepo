@@ -1,93 +1,163 @@
 import { PropertyRepository, PaginationOptions, PaginatedResult } from '../../domain/repositories/PropertyRepository';
-import { Property, PropertyType, PropertyStatus, Location, Coordinates, AreaUnit } from '../../domain/entities/Property';
+import { Property, Location, Coordinates } from '../../domain/entities/Property';
+import { PropertyApiClient } from '../api/PropertyApiClient';
+import { PropertyDto } from '../../../../../shared/contracts/property.dto';
 
-// Infrastructure implementation - handles data persistence
+// Infrastructure implementation - handles data persistence with API
 export class PropertyRepositoryImpl implements PropertyRepository {
-  private properties: Property[] = [];
+  private apiClient: PropertyApiClient;
 
-  constructor() {
-    // Initialize with sample data
-    this.initializeSampleData();
+  constructor(apiClient: PropertyApiClient) {
+    this.apiClient = apiClient;
   }
 
   async findById(id: string): Promise<Property | null> {
-    return this.properties.find(property => property.id === id) || null;
+    try {
+      const propertyDto = await this.apiClient.fetchPropertyById(id);
+      return this.mapDtoToEntity(propertyDto);
+    } catch (error) {
+      console.error('Error fetching property by ID:', error);
+      return null;
+    }
   }
 
   async findAll(): Promise<Property[]> {
-    return [...this.properties];
+    try {
+      const response = await this.apiClient.fetchProperties({}, { page: 1, limit: 1000 });
+      return response.properties.map(dto => this.mapDtoToEntity(dto));
+    } catch (error) {
+      console.error('Error fetching all properties:', error);
+      return [];
+    }
   }
 
   async findByStatus(status: string): Promise<Property[]> {
-    return this.properties.filter(property => property.status === status);
+    try {
+      const response = await this.apiClient.fetchProperties({ status }, { page: 1, limit: 1000 });
+      return response.properties.map(dto => this.mapDtoToEntity(dto));
+    } catch (error) {
+      console.error('Error fetching properties by status:', error);
+      return [];
+    }
   }
 
   async findByPriceRange(minPrice: number, maxPrice: number): Promise<Property[]> {
-    return this.properties.filter(
-      property => property.price >= minPrice && property.price <= maxPrice
-    );
+    try {
+      const response = await this.apiClient.fetchProperties(
+        { minPrice, maxPrice }, 
+        { page: 1, limit: 1000 }
+      );
+      return response.properties.map(dto => this.mapDtoToEntity(dto));
+    } catch (error) {
+      console.error('Error fetching properties by price range:', error);
+      return [];
+    }
+  }
+
+  async findWithPagination(options: PaginationOptions): Promise<PaginatedResult<Property>> {
+    try {
+      const response = await this.apiClient.fetchProperties({}, {
+        page: options.page || 1,
+        limit: options.limit || 12
+      });
+      
+      return {
+        data: response.properties.map(dto => this.mapDtoToEntity(dto)),
+        pagination: response.pagination
+      };
+    } catch (error) {
+      console.error('Error fetching properties with pagination:', error);
+      return {
+        data: [],
+        pagination: {
+          page: options.page || 1,
+          limit: options.limit || 12,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        }
+      };
+    }
   }
 
   async save(property: Property): Promise<Property> {
-    this.properties.push(property);
-    return property;
+    try {
+      const propertyDto = this.mapEntityToDto(property);
+      const savedDto = await this.apiClient.createProperty(propertyDto);
+      return this.mapDtoToEntity(savedDto);
+    } catch (error) {
+      console.error('Error saving property:', error);
+      throw error;
+    }
   }
 
   async update(property: Property): Promise<Property> {
-    const index = this.properties.findIndex(p => p.id === property.id);
-    if (index !== -1) {
-      this.properties[index] = property;
-    }
+    // Note: PropertyApiClient doesn't have update method yet
+    // For now, just return the property as-is
     return property;
   }
 
-  async delete(id: string): Promise<void> {
-    this.properties = this.properties.filter(property => property.id !== id);
+  async delete(_id: string): Promise<void> {
+    // Note: PropertyApiClient doesn't have delete method yet
+    // For now, just log
+    console.log('Delete method not implemented yet');
   }
 
-  private initializeSampleData(): void {
-    const now = new Date();
-    
-    // Sample property 1
-    const property1 = new Property(
-      '1',
-      'Modern Apartment in Downtown',
-      'Beautiful modern apartment with city views',
-      500000,
-      'USD',
-      new Location('123 Main St', 'New York', 'NY', 'USA', new Coordinates(40.7128, -74.0060)),
-      PropertyType.APARTMENT,
-      2,
-      2,
-      120,
-      AreaUnit.M2,
-      ['Balcony', 'Parking', 'Gym'],
-      ['image1.jpg', 'image2.jpg'],
-      PropertyStatus.AVAILABLE,
-      now,
-      now
+  // Mapper methods
+  private mapDtoToEntity(dto: PropertyDto): Property {
+    // Create Location instance
+    const location = new Location(
+      dto.location.address,
+      dto.location.city,
+      dto.location.state,
+      dto.location.country,
+      dto.location.coordinates 
+        ? new Coordinates(dto.location.coordinates.lat, dto.location.coordinates.lng)
+        : undefined
     );
 
-    // Sample property 2
-    const property2 = new Property(
-      '2',
-      'Luxury House with Garden',
-      'Spacious house with beautiful garden',
-      1200000,
-      'USD',
-      new Location('456 Oak Ave', 'Los Angeles', 'CA', 'USA', new Coordinates(34.0522, -118.2437)),
-      PropertyType.HOUSE,
-      4,
-      3,
-      200,
-      AreaUnit.M2,
-      ['Garden', 'Pool', 'Garage', 'Fireplace'],
-      ['image3.jpg', 'image4.jpg'],
-      PropertyStatus.AVAILABLE,
-      now,
-      now
+    return new Property(
+      dto.id,
+      dto.title,
+      dto.description,
+      dto.price,
+      dto.currency,
+      location,
+      dto.propertyType as Property['propertyType'], // You might need to map this properly
+      dto.area,
+      dto.areaUnit as Property['areaUnit'], // You might need to map this properly
+      dto.features,
+      dto.images,
+      dto.status as Property['status'], // You might need to map this properly
+      new Date(dto.createdAt),
+      new Date(dto.updatedAt),
+      dto.bedrooms,
+      dto.bathrooms
     );
+  }
 
-    this.properties = [property1, property2];
+  private mapEntityToDto(entity: Property): Partial<PropertyDto> {
+    return {
+      title: entity.title,
+      description: entity.description,
+      price: entity.price,
+      currency: entity.currency,
+      location: {
+        address: entity.location.address,
+        city: entity.location.city,
+        state: entity.location.state,
+        country: entity.location.country,
+        coordinates: entity.location.coordinates
+      },
+      propertyType: entity.propertyType as PropertyDto['propertyType'],
+      bedrooms: entity.bedrooms,
+      bathrooms: entity.bathrooms,
+      area: entity.area,
+      areaUnit: entity.areaUnit as PropertyDto['areaUnit'],
+      features: entity.features,
+      images: entity.images,
+      status: entity.status as PropertyDto['status']
+    };
   }
 }

@@ -4,10 +4,10 @@ import propertiesData from '../../../../../../public/mock/properties.json';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const property = propertiesData.find(p => p.id === id);
 
     if (!property) {

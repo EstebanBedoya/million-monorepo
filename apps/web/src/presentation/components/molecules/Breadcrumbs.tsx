@@ -31,7 +31,7 @@ export const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
                   icon={ChevronRight} 
                   size="sm" 
                   className="text-secondary mx-2" 
-                  aria-hidden="true"
+                  aria-hidden={true}
                 />
               )}
               

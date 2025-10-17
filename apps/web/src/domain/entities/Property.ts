@@ -8,15 +8,15 @@ export class Property {
     public readonly currency: string,
     public readonly location: Location,
     public readonly propertyType: PropertyType,
-    public readonly bedrooms?: number,
-    public readonly bathrooms?: number,
     public readonly area: number,
     public readonly areaUnit: AreaUnit,
     public readonly features: string[],
     public readonly images: string[],
     public readonly status: PropertyStatus,
     public readonly createdAt: Date,
-    public readonly updatedAt: Date
+    public readonly updatedAt: Date,
+    public readonly bedrooms?: number,
+    public readonly bathrooms?: number
   ) {}
 
   // Business rules

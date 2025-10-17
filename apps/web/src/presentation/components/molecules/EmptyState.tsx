@@ -25,7 +25,7 @@ export function EmptyState({
           icon={Home} 
           size="xl" 
           className="text-secondary"
-          aria-hidden="true"
+          aria-hidden={true}
         />
       </div>
 

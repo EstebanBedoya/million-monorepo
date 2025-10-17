@@ -18,7 +18,7 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "ESTATELY - Find Your Dream Home",
+  title: "MILLION - Find Your Dream Home",
   description: "Discover luxury real estate properties with elegant design and exceptional service",
 };
 

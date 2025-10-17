@@ -1,7 +1,7 @@
-# ESTATELY - Properties Listing Implementation
+# MILLION - Properties Listing Implementation
 
 ## Overview
-Implementation of a luxury real estate property listing application with elegant ESTATELY design theme, following Clean Architecture principles.
+Implementation of a luxury real estate property listing application with elegant MILLION design theme, following Clean Architecture principles.
 
 ## Features Implemented
 
@@ -114,7 +114,7 @@ Implementation of a luxury real estate property listing application with elegant
 
 ---
 
-## Design System: ESTATELY Theme
+## Design System: MILLION Theme
 
 ### Color Palette
 
@@ -361,7 +361,7 @@ npm test
 ## Credits
 
 **Design Inspiration**: Luxury real estate platforms
-**Theme**: ESTATELY (custom elegant theme)
+**Theme**: MILLION (custom elegant theme)
 **Architecture**: Clean Architecture + SOLID principles
 **Testing**: Jest + React Testing Library
 **Framework**: Next.js 14 + TypeScript + Tailwind CSS

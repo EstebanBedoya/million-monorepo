@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MockPropertyType } from '../../domain/schemas/property.schema';
 import { PropertyList } from '../components/PropertyList';
@@ -21,9 +21,10 @@ interface PropertiesPageProps {
   };
 }
 
-export function PropertiesPage({ 
-  initialProperties = [], 
-  initialPagination 
+// Internal component that uses search params
+function PropertiesPageContent({
+  initialProperties = [],
+  initialPagination
 }: PropertiesPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -164,7 +165,7 @@ export function PropertiesPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-foreground mb-3">
-              ESTATELY
+              MILLION
             </h1>
             <p className="text-xl text-accent mb-2">
               Find Your Dream Home
@@ -246,10 +247,19 @@ export function PropertiesPage({
       <footer className="bg-card border-t border-border mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-sm text-secondary">
-            <p>© 2025 ESTATELY. Luxury Real Estate Platform.</p>
+            <p>© 2025 MILLION. Luxury Real Estate Platform.</p>
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+// Wrapper component with Suspense boundary for useSearchParams
+export function PropertiesPage(props: PropertiesPageProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PropertiesPageContent {...props} />
+    </Suspense>
   );
 }

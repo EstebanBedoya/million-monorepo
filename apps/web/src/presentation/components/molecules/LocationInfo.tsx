@@ -16,7 +16,7 @@ export const LocationInfo = ({ address, city, className }: LocationInfoProps) =>
         icon={MapPin} 
         size="md" 
         className="text-secondary flex-shrink-0 mt-0.5" 
-        aria-hidden="true"
+        aria-hidden={true}
       />
       <div className="flex-1 min-w-0">
         <p className="text-sm text-secondary line-clamp-2">

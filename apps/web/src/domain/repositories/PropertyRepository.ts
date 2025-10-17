@@ -6,6 +6,7 @@ export interface PropertyRepository {
   findAll(): Promise<Property[]>;
   findByStatus(status: string): Promise<Property[]>;
   findByPriceRange(minPrice: number, maxPrice: number): Promise<Property[]>;
+  findWithPagination(options: PaginationOptions): Promise<PaginatedResult<Property>>;
   save(property: Property): Promise<Property>;
   update(property: Property): Promise<Property>;
   delete(id: string): Promise<void>;
