@@ -2,11 +2,11 @@
 export class Property {
   constructor(
     public readonly id: string,
-    public readonly title: string,
+    public readonly name: string,
     public readonly description: string,
     public readonly price: number,
     public readonly currency: string,
-    public readonly location: Location,
+    public readonly location: string,
     public readonly propertyType: PropertyType,
     public readonly area: number,
     public readonly areaUnit: AreaUnit,
@@ -19,17 +19,54 @@ export class Property {
     public readonly bathrooms?: number
   ) {}
 
-  // Business rules
+  static create(data: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    currency: string;
+    location: string;
+    propertyType: string;
+    area: number;
+    areaUnit: string;
+    features: string[];
+    images: string[];
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    bedrooms?: number;
+    bathrooms?: number;
+  }): Property {
+    return new Property(
+      data.id,
+      data.name,
+      data.description,
+      data.price,
+      data.currency,
+      data.location,
+      data.propertyType as PropertyType,
+      data.area,
+      data.areaUnit as AreaUnit,
+      data.features,
+      data.images,
+      data.status as PropertyStatus,
+      new Date(data.createdAt),
+      new Date(data.updatedAt),
+      data.bedrooms,
+      data.bathrooms
+    );
+  }
+
   public isAvailable(): boolean {
     return this.status === PropertyStatus.AVAILABLE;
   }
 
   public isExpensive(): boolean {
-    return this.price > 1000000; // Example business rule
+    return this.price > 1000000;
   }
 
   public hasMinimumFeatures(): boolean {
-    return this.features.length >= 3; // Example business rule
+    return this.features.length >= 3;
   }
 
   public getFormattedPrice(): string {
@@ -55,23 +92,3 @@ export enum AreaUnit {
   SQFT = 'sqft'
 }
 
-export class Location {
-  constructor(
-    public readonly address: string,
-    public readonly city: string,
-    public readonly state: string,
-    public readonly country: string,
-    public readonly coordinates?: Coordinates
-  ) {}
-
-  public getFullAddress(): string {
-    return `${this.address}, ${this.city}, ${this.state}, ${this.country}`;
-  }
-}
-
-export class Coordinates {
-  constructor(
-    public readonly lat: number,
-    public readonly lng: number
-  ) {}
-}

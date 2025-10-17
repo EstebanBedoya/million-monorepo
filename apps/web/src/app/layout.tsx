@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cinzel, Cairo } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "../providers/ReduxProvider";
+import { ThemeToggle } from "../presentation/components/molecules/ThemeToggle";
 
 const cinzel = Cinzel({
   variable: "--font-cinzel",
@@ -35,6 +36,7 @@ export default function RootLayout({
       >
         <ReduxProvider>
           {children}
+          <ThemeToggle />
         </ReduxProvider>
       </body>
     </html>

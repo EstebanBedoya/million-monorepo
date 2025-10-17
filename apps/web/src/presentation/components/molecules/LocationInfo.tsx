@@ -5,11 +5,10 @@ import { Icon } from '../atoms/Icon';
 
 export interface LocationInfoProps {
   address: string;
-  city: string;
   className?: string;
 }
 
-export const LocationInfo = ({ address, city, className }: LocationInfoProps) => {
+export const LocationInfo = ({ address, className }: LocationInfoProps) => {
   return (
     <div className={`flex items-start gap-2 ${className}`}>
       <Icon 
@@ -21,9 +20,6 @@ export const LocationInfo = ({ address, city, className }: LocationInfoProps) =>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-secondary line-clamp-2">
           {address}
-        </p>
-        <p className="text-sm font-medium text-foreground mt-0.5">
-          {city}
         </p>
       </div>
     </div>

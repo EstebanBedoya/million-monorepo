@@ -14,6 +14,7 @@ export const Image = ({
   fallbackSrc = '/placeholder-property.jpg',
   onError,
   src,
+  alt,
   ...props 
 }: ImageProps) => {
   const [hasError, setHasError] = useState(false);
@@ -53,6 +54,7 @@ export const Image = ({
   return (
     <NextImage
       src={src}
+      alt={alt}
       className={cn('object-cover', className)}
       onError={handleError}
       {...props}

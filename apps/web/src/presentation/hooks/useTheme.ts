@@ -40,6 +40,8 @@ export const useTheme = () => {
 
   // Get initial theme from localStorage or system preference
   const getInitialTheme = (): Theme => {
+    if (typeof window === 'undefined') return 'light';
+    
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme && THEMES[savedTheme]) {
       return savedTheme;
@@ -55,6 +57,8 @@ export const useTheme = () => {
 
   // Apply theme to document
   const applyTheme = (newTheme: Theme) => {
+    if (typeof window === 'undefined') return;
+    
     const root = document.documentElement;
     
     // Remove all theme classes

@@ -29,7 +29,6 @@ export interface PropertyApiResponse {
   };
 }
 
-// API Client for external API calls using HttpClient
 export class PropertyApiClient {
   private httpClient: HttpClient;
 
@@ -42,12 +41,9 @@ export class PropertyApiClient {
     pagination: PropertyApiPagination = { page: 1, limit: 12 }
   ): Promise<PropertyApiResponse> {
     const params = new URLSearchParams();
-    
-    // Add pagination params
     params.set('page', pagination.page.toString());
     params.set('limit', pagination.limit.toString());
     
-    // Add filter params
     if (filters.search) params.set('search', filters.search);
     if (filters.minPrice) params.set('minPrice', filters.minPrice.toString());
     if (filters.maxPrice) params.set('maxPrice', filters.maxPrice.toString());
@@ -79,7 +75,7 @@ export class PropertyApiClient {
 
   async createProperty(propertyData: Partial<PropertyDto>): Promise<PropertyDto> {
     const config: RequestConfig = {
-      retry: false, // Don't retry POST requests
+      retry: false,
       skipLogging: false,
     };
 

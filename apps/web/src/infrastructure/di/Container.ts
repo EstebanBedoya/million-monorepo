@@ -1,11 +1,28 @@
 import { PropertyRepository } from '../../domain/repositories/PropertyRepository';
 import { PropertyRepositoryImpl } from '../repositories/PropertyRepositoryImpl';
-import { PropertyService } from '../../application/interfaces/PropertyService';
 import { PropertyServiceImpl } from '../../application/services/PropertyServiceImpl';
 import { HttpClient, HttpClientConfig } from '../http/HttpClient';
 import { PropertyApiClient } from '../api/PropertyApiClient';
 
-// Dependency Injection Container - Enhanced implementation
+/**
+ * Dependency Injection Container singleton for managing application-wide services.
+ * 
+ * This container is responsible for:
+ * - Registering and instantiating core infrastructure/services as singletons (e.g., HttpClient, API clients, repositories)
+ * - Resolving dependencies during initial registration, ensuring correct instantiation order
+ * - Exposing a type-safe get<T> API for consumers (presentation, application layer) to retrieve services by name
+ * - Centralizing environment configuration for injected services (e.g., API base URL)
+ * 
+ * Usage:
+ *   const container = Container.getInstance();
+ *   const propertyService = container.get<PropertyService>('PropertyService');
+ * 
+ * Why a DI container?
+ *   - Promotes modular, testable code by decoupling implementation from consumption
+ *   - Enables flexible swapping of infrastructure or domain service implementations
+ *   - Avoids manual wiring of dependencies throughout the application
+ */
+
 export class Container {
   private static instance: Container;
   private services: Map<string, unknown> = new Map();

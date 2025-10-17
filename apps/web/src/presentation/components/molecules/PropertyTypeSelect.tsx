@@ -13,12 +13,10 @@ export interface PropertyTypeSelectProps {
 
 const propertyTypes = [
   { value: '', label: 'All Types' },
-  { value: 'House', label: 'House' },
-  { value: 'Apartment', label: 'Apartment' },
-  { value: 'Villa', label: 'Villa' },
-  { value: 'Condo', label: 'Condo' },
-  { value: 'Townhouse', label: 'Townhouse' },
-  { value: 'Studio', label: 'Studio' }
+  { value: 'house', label: 'House' },
+  { value: 'apartment', label: 'Apartment' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'land', label: 'Land' }
 ];
 
 export const PropertyTypeSelect = ({ 

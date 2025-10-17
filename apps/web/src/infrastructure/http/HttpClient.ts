@@ -18,7 +18,10 @@ export interface RequestConfig extends AxiosRequestConfig {
   };
 }
 
-// Extend AxiosRequestConfig to include our custom properties
+/**
+ * Extend AxiosRequestConfig to include our custom properties
+ * This allows us to use our custom properties in the request config
+ */
 declare module 'axios' {
   interface AxiosRequestConfig {
     skipAuth?: boolean;
@@ -50,22 +53,18 @@ export class HttpClient {
   }
 
   private setupInterceptors(): void {
-    // Request interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        // Add auth token if available
         const token = this.getAuthToken();
         if (token && !config.skipAuth) {
           config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // Add request ID for tracking
         config.metadata = {
           requestId: this.generateRequestId(),
           timestamp: Date.now(),
         };
 
-        // Log request
         if (!config.skipLogging) {
           console.log(`[HTTP Request] ${config.method?.toUpperCase()} ${config.url}`, {
             requestId: config.metadata.requestId,
@@ -82,10 +81,8 @@ export class HttpClient {
       }
     );
 
-    // Response interceptor
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-        // Log successful response
         if (!response.config.skipLogging) {
           console.log(`[HTTP Response] ${response.status} ${response.config.url}`, {
             requestId: response.config.metadata?.requestId,
@@ -99,12 +96,10 @@ export class HttpClient {
       async (error: AxiosError) => {
         const originalRequest = error.config as RequestConfig;
 
-        // Handle retries
         if (this.shouldRetry(error, originalRequest)) {
           return this.retryRequest(originalRequest);
         }
 
-        // Log error
         if (!originalRequest?.skipLogging) {
           console.error('[HTTP Error]', {
             requestId: originalRequest?.metadata?.requestId,
@@ -122,7 +117,6 @@ export class HttpClient {
     if (!config?.retry) return false;
     if ((config.retryCount || 0) >= this.config.retries) return false;
     
-    // Retry on network errors or 5xx errors
     return (
       !error.response || 
       (error.response.status >= 500 && error.response.status < 600)
@@ -132,7 +126,6 @@ export class HttpClient {
   private async retryRequest(config: RequestConfig): Promise<AxiosResponse> {
     config.retryCount = (config.retryCount || 0) + 1;
     
-    // Exponential backoff
     const delay = this.config.retryDelay * Math.pow(2, (config.retryCount || 1) - 1);
     await this.sleep(delay);
 
@@ -156,7 +149,6 @@ export class HttpClient {
     return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  // Public methods
   async get<T>(url: string, config?: RequestConfig): Promise<T> {
     const response = await this.axiosInstance.get<T>(url, config);
     return response.data;
@@ -182,7 +174,6 @@ export class HttpClient {
     return response.data;
   }
 
-  // Method to update auth token
   setAuthToken(token: string | null): void {
     if (token) {
       localStorage.setItem('auth_token', token);
@@ -191,7 +182,6 @@ export class HttpClient {
     }
   }
 
-  // Method to clear auth token
   clearAuthToken(): void {
     localStorage.removeItem('auth_token');
   }

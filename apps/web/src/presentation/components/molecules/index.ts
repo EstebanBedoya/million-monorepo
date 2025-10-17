@@ -9,6 +9,7 @@ export { PageButton } from './PageButton';
 export { PageNumberButton } from './PageNumberButton';
 export { EmptyState } from './EmptyState';
 export { PropertyCardSkeleton, PropertyListSkeleton } from './PropertyCardSkeleton';
+export { PaginationSkeleton } from './PaginationSkeleton';
 export { ThemeToggle } from './ThemeToggle';
 export { AsyncBoundary } from './AsyncBoundary';
 export { ErrorState } from './ErrorState';

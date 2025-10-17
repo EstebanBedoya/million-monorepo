@@ -1,14 +1,30 @@
 import { PropertyService, CreatePropertyData } from '../interfaces/PropertyService';
-import { Property, Location, Coordinates } from '../../domain/entities/Property';
+import { Property, PropertyStatus } from '../../domain/entities/Property';
 import { PaginatedResult } from '../../domain/repositories/PropertyRepository';
 import { PropertyRepository } from '../../domain/repositories/PropertyRepository';
 
-// Service implementation - simplified without use cases
+/**
+ * PropertyServiceImpl provides the application-level implementation for all property-related
+ * service operations, including property retrieval, listing, creation, and specialized queries.
+ * 
+ * This class acts as an intermediary between the domain repository (PropertyRepository)
+ * and higher layers (controllers/use cases), encapsulating any business logic required when
+ * handling properties.
+ *
+ * Methods in this implementation:
+ * - Ensure input validation for key operations (e.g., property creation, ID presence).
+ * - Support pagination for property lists via getAllProperties.
+ * - Surface domain and application errors in a manner suitable for use in controllers.
+ * - Default to newly created properties being available.
+ *
+ * Dependencies:
+ * - Requires a PropertyRepository instance, which must implement persistence logic for properties.
+ */
+
 export class PropertyServiceImpl implements PropertyService {
   constructor(private readonly propertyRepository: PropertyRepository) {}
 
   async getProperty(id: string): Promise<Property | null> {
-    // Simple validation
     if (!id || id.trim() === '') {
       throw new Error('Property ID is required');
     }
@@ -23,39 +39,28 @@ export class PropertyServiceImpl implements PropertyService {
   }
 
   async createProperty(propertyData: CreatePropertyData): Promise<Property> {
-    // Simple validation
-    if (!propertyData.title || propertyData.title.trim() === '') {
-      throw new Error('Property title is required');
+    if (!propertyData.name || propertyData.name.trim() === '') {
+      throw new Error('Property name is required');
     }
     if (propertyData.price <= 0) {
       throw new Error('Property price must be greater than 0');
     }
 
-    // Create property entity
     const now = new Date();
-    const location = new Location(
-      propertyData.location.address,
-      propertyData.location.city,
-      propertyData.location.state,
-      propertyData.location.country,
-      propertyData.location.coordinates 
-        ? new Coordinates(propertyData.location.coordinates.lat, propertyData.location.coordinates.lng)
-        : undefined
-    );
     
     const property = new Property(
       crypto.randomUUID(),
-      propertyData.title,
+      propertyData.name,
       propertyData.description,
       propertyData.price,
       propertyData.currency,
-      location,
+      propertyData.location,
       propertyData.propertyType as Property['propertyType'],
       propertyData.area,
       propertyData.areaUnit as Property['areaUnit'],
       propertyData.features,
       propertyData.images,
-      'available' as Property['status'], // PropertyStatus.AVAILABLE
+      PropertyStatus.AVAILABLE,
       now,
       now,
       propertyData.bedrooms,
@@ -66,13 +71,11 @@ export class PropertyServiceImpl implements PropertyService {
   }
 
   async getAvailableProperties(): Promise<Property[]> {
-    // Simple business logic
     const allProperties = await this.propertyRepository.findAll();
     return allProperties.filter(property => property.isAvailable());
   }
 
   async getExpensiveProperties(): Promise<Property[]> {
-    // Simple business logic
     const allProperties = await this.propertyRepository.findAll();
     return allProperties.filter(property => property.isExpensive());
   }

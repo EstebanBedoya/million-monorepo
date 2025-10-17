@@ -6,8 +6,11 @@ import { MockPropertyType } from '../../domain/schemas/property.schema';
 import { PropertyList } from '../components/PropertyList';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { Pagination } from '../components/organisms/Pagination';
-import { ThemeToggle } from '../components/molecules/ThemeToggle';
+import { PaginationSkeleton } from '../components/molecules/PaginationSkeleton';
 import { FilterValues } from '../components/organisms/FiltersBar';
+import { usePropertiesRedux } from '../hooks/usePropertiesRedux';
+import { useAppSelector } from '../../store/hooks';
+import { selectPaginatedProperties, selectFilteredPagination } from '../../store/selectors/propertySelectors';
 
 interface PropertiesPageProps {
   initialProperties?: MockPropertyType[];
@@ -29,18 +32,28 @@ function PropertiesPageContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // State
-  const [properties, setProperties] = useState<MockPropertyType[]>(initialProperties);
-  const [loading, setLoading] = useState(false);
+  // Redux hooks
+  const {
+    filteredProperties,
+    isLoading: loading,
+    error,
+    pagination,
+    currentFilter,
+    searchFilters,
+    loadProperties,
+    loadAvailableProperties,
+    loadExpensiveProperties,
+    changeFilter,
+    updateSearchFilters,
+    clearFilters,
+    clearError,
+    isCacheValid,
+    needsRefresh,
+  } = usePropertiesRedux();
+  
+  // Local state (UI only)
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pagination, setPagination] = useState(initialPagination || {
-    page: 1,
-    limit: 12,
-    total: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrev: false,
-  });
+  const [isChangingPage, setIsChangingPage] = useState(false);
 
   // Get filters from URL
   const getFiltersFromURL = useCallback((): FilterValues => {
@@ -77,48 +90,51 @@ function PropertiesPageContent({
     if (newFilters.propertyType) params.set('propertyType', newFilters.propertyType);
     if (page > 1) params.set('page', page.toString());
 
-    routerRef.current.push(`/?${params.toString()}`, { scroll: false });
+    const queryString = params.toString();
+    const url = queryString ? `/properties?${queryString}` : '/properties';
+    routerRef.current.push(url, { scroll: false });
   }, []);
 
-  // Fetch properties
-  const fetchProperties = useCallback(async (filterValues: FilterValues, page: number) => {
-    setLoading(true);
-    
-    try {
-      const params = new URLSearchParams();
-      params.set('page', page.toString());
-      params.set('limit', '12');
-      
-      if (filterValues.search) params.set('search', filterValues.search);
-      if (filterValues.minPrice > 0) params.set('minPrice', filterValues.minPrice.toString());
-      if (filterValues.maxPrice < 5000000) params.set('maxPrice', filterValues.maxPrice.toString());
-
-      const response = await fetch(`/api/mock/properties?${params.toString()}`);
-      const data = await response.json();
-
-      setProperties(data.properties || []);
-      setPagination(data.pagination);
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-      setProperties([]);
-    } finally {
-      setLoading(false);
+  // Load properties using Redux (load all properties once)
+  const loadPropertiesData = useCallback(async (filterValues: FilterValues, page: number) => {
+    // Check if we need to refresh data
+    if (!isCacheValid || needsRefresh) {
+      console.log('Cache expired, loading fresh data');
+      await loadProperties({ 
+        page: 1, // Always load from page 1 to get all properties
+        limit: 1000 // Load a large number to get all properties
+      });
+    } else {
+      console.log('Using cached data');
     }
-  }, []);
+  }, [loadProperties, isCacheValid, needsRefresh]);
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: FilterValues) => {
     setFilters(newFilters);
     updateURL(newFilters, 1);
-    fetchProperties(newFilters, 1);
-  }, []);
+    
+    // Update Redux filters
+    updateSearchFilters({
+      search: newFilters.search,
+      minPrice: newFilters.minPrice,
+      maxPrice: newFilters.maxPrice,
+      propertyType: newFilters.propertyType || '',
+    });
+  }, [updateSearchFilters, updateURL]);
 
   // Handle page changes
   const handlePageChange = useCallback((page: number) => {
+    setIsChangingPage(true);
     updateURL(filtersRef.current, page);
-    fetchProperties(filtersRef.current, page);
+    // No need to reload data, just update URL for client-side pagination
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    
+    // Reset changing page state after a short delay to show smooth transition
+    setTimeout(() => {
+      setIsChangingPage(false);
+    }, 300);
+  }, [updateURL]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
@@ -130,8 +146,10 @@ function PropertiesPageContent({
     };
     setFilters(defaultFilters);
     updateURL(defaultFilters, 1);
-    fetchProperties(defaultFilters, 1);
-  }, []);
+    
+    // Clear Redux filters
+    clearFilters();
+  }, [clearFilters, updateURL]);
 
   // Initial load from URL params
   useEffect(() => {
@@ -139,26 +157,51 @@ function PropertiesPageContent({
     const page = Number(searchParams.get('page')) || 1;
     
     setFilters(urlFilters);
-    fetchProperties(urlFilters, page);
+    
+    // Sync filters with Redux
+    updateSearchFilters({
+      search: urlFilters.search,
+      minPrice: urlFilters.minPrice,
+      maxPrice: urlFilters.maxPrice,
+      propertyType: urlFilters.propertyType || '',
+    });
+    
+    loadPropertiesData(urlFilters, page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
-  // Memoized filtered properties (for client-side additional filtering if needed)
+
+  // Get current page from URL
+  const currentPage = Number(searchParams.get('page')) || 1;
+  const limit = 12;
+
+  // Use client-side pagination for filtered properties
+  const paginatedProperties = useAppSelector(selectPaginatedProperties(currentPage, limit));
+  const filteredPagination = useAppSelector(selectFilteredPagination(currentPage, limit));
+
   const displayedProperties = useMemo(() => {
-    let filtered = [...properties];
-
-    // Additional client-side filtering by property type if needed
-    if (filters.propertyType) {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
-    }
-
-    return filtered;
-  }, [properties, filters.propertyType]);
+    // Convert Redux properties to the expected format for PropertyList
+    return paginatedProperties.map((property: any) => ({
+      id: property.id,
+      name: property.name,
+      location: property.location,
+      price: property.price,
+      currency: property.currency,
+      propertyType: property.propertyType,
+      bedrooms: property.bedrooms || 0,
+      bathrooms: property.bathrooms || 0,
+      area: property.area,
+      areaUnit: property.areaUnit,
+      images: property.images,
+      status: property.status,
+      features: property.features,
+      createdAt: property.createdAt,
+      updatedAt: property.updatedAt,
+    }));
+  }, [paginatedProperties]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Theme Toggle */}
-      <ThemeToggle />
       
       {/* Header */}
       <header className="bg-card border-b border-border">
@@ -208,10 +251,10 @@ function PropertiesPageContent({
             {!loading && (
               <div className="mb-6">
                 <p className="text-sm text-secondary">
-                  {pagination.total > 0 ? (
+                  {filteredPagination && filteredPagination.total > 0 ? (
                     <>
-                      Showing <span className="font-medium text-foreground">{properties.length}</span> of{' '}
-                      <span className="font-medium text-foreground">{pagination.total}</span> properties
+                      Showing <span className="font-medium text-foreground">{displayedProperties.length}</span> of{' '}
+                      <span className="font-medium text-foreground">{filteredPagination.total}</span> properties
                     </>
                   ) : (
                     'No properties found'
@@ -224,20 +267,26 @@ function PropertiesPageContent({
             <PropertyList 
               properties={displayedProperties}
               loading={loading}
+              error={error}
+              onRetry={() => loadProperties({ page: pagination?.page || 1, limit: 12 })}
               onClearFilters={handleClearFilters}
             />
 
             {/* Pagination */}
-            {!loading && properties.length > 0 && (
-              <div className="mt-8">
-                <Pagination
-                  currentPage={pagination.page}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                  hasNext={pagination.hasNext}
-                  hasPrev={pagination.hasPrev}
-                />
-              </div>
+            {loading || isChangingPage ? (
+              <PaginationSkeleton />
+            ) : (
+              displayedProperties.length > 0 && filteredPagination && (
+                <div className="mt-8">
+                  <Pagination
+                    currentPage={filteredPagination.page}
+                    totalPages={filteredPagination.totalPages}
+                    onPageChange={handlePageChange}
+                    hasNext={filteredPagination.hasNext}
+                    hasPrev={filteredPagination.hasPrev}
+                  />
+                </div>
+              )
             )}
           </div>
         </main>

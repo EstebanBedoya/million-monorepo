@@ -23,7 +23,7 @@ export const propertyMiddleware: Middleware = (store) => (next) => (action: unkn
     if (action.type.endsWith('/fulfilled')) {
       if (action.type.includes('fetchProperties')) {
         store.dispatch(addNotification({
-          message: `Loaded ${state.properties.properties.length} properties`,
+          message: `Loaded ${state.properties.allIds.length} properties`,
           type: 'success'
         }));
       } else if (action.type.includes('createProperty')) {

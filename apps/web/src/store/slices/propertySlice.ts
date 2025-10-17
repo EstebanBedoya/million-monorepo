@@ -1,7 +1,27 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Property } from '../../domain/entities/Property';
+import { Property, PropertyType, PropertyStatus, AreaUnit } from '../../domain/entities/Property';
 import { PropertyService, CreatePropertyData } from '../../application/interfaces/PropertyService';
 import { Container } from '../../infrastructure/di/Container';
+
+// Serializable property interface for Redux state
+export interface SerializableProperty {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  location: string;
+  propertyType: PropertyType;
+  area: number;
+  areaUnit: AreaUnit;
+  features: string[];
+  images: string[];
+  status: PropertyStatus;
+  createdAt: string; // ISO string instead of Date
+  updatedAt: string; // ISO string instead of Date
+  bedrooms?: number;
+  bathrooms?: number;
+}
 
 // Async thunks for property operations
 export const fetchProperties = createAsyncThunk(
@@ -9,7 +29,13 @@ export const fetchProperties = createAsyncThunk(
   async (options: { page?: number; limit?: number } = {}) => {
     const container = Container.getInstance();
     const propertyService = container.get<PropertyService>('PropertyService');
-    return await propertyService.getAllProperties(options.page, options.limit);
+    const result = await propertyService.getAllProperties(options.page, options.limit);
+    
+    // Convert Property instances to serializable format
+    return {
+      data: result.data.map(propertyToSerializable),
+      pagination: result.pagination
+    };
   }
 );
 
@@ -18,7 +44,10 @@ export const fetchAvailableProperties = createAsyncThunk(
   async () => {
     const container = Container.getInstance();
     const propertyService = container.get<PropertyService>('PropertyService');
-    return await propertyService.getAvailableProperties();
+    const properties = await propertyService.getAvailableProperties();
+    
+    // Convert Property instances to serializable format
+    return properties.map(propertyToSerializable);
   }
 );
 
@@ -27,7 +56,10 @@ export const fetchExpensiveProperties = createAsyncThunk(
   async () => {
     const container = Container.getInstance();
     const propertyService = container.get<PropertyService>('PropertyService');
-    return await propertyService.getExpensiveProperties();
+    const properties = await propertyService.getExpensiveProperties();
+    
+    // Convert Property instances to serializable format
+    return properties.map(propertyToSerializable);
   }
 );
 
@@ -36,7 +68,10 @@ export const fetchPropertyById = createAsyncThunk(
   async (id: string) => {
     const container = Container.getInstance();
     const propertyService = container.get<PropertyService>('PropertyService');
-    return await propertyService.getProperty(id);
+    const property = await propertyService.getProperty(id);
+    
+    // Convert Property instance to serializable format
+    return property ? propertyToSerializable(property) : null;
   }
 );
 
@@ -45,16 +80,66 @@ export const createProperty = createAsyncThunk(
   async (propertyData: CreatePropertyData) => {
     const container = Container.getInstance();
     const propertyService = container.get<PropertyService>('PropertyService');
-    return await propertyService.createProperty(propertyData);
+    const property = await propertyService.createProperty(propertyData);
+    
+    // Convert Property instance to serializable format
+    return propertyToSerializable(property);
   }
 );
 
-// Property slice state interface
+// Helper functions to convert between Property instances and serializable data
+const propertyToSerializable = (property: Property): SerializableProperty => ({
+  id: property.id,
+  name: property.name,
+  description: property.description,
+  price: property.price,
+  currency: property.currency,
+  location: property.location,
+  propertyType: property.propertyType,
+  area: property.area,
+  areaUnit: property.areaUnit,
+  features: property.features,
+  images: property.images,
+  status: property.status,
+  createdAt: property.createdAt.toISOString(),
+  updatedAt: property.updatedAt.toISOString(),
+  bedrooms: property.bedrooms,
+  bathrooms: property.bathrooms,
+});
+
+const serializableToProperty = (data: SerializableProperty): Property => 
+  Property.create({
+    id: data.id,
+    name: data.name,
+    description: data.description,
+    price: data.price,
+    currency: data.currency,
+    location: data.location,
+    propertyType: data.propertyType,
+    area: data.area,
+    areaUnit: data.areaUnit,
+    features: data.features,
+    images: data.images,
+    status: data.status,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    bedrooms: data.bedrooms,
+    bathrooms: data.bathrooms,
+  });
+
+// Normalized state interface for efficient handling of 1000+ properties
 interface PropertyState {
-  properties: Property[];
-  selectedProperty: Property | null;
+  // Normalized data structure - using serializable data
+  byId: Record<string, SerializableProperty>;
+  allIds: string[];
+  filteredIds: string[]; // IDs after applying filters
+  
+  // UI state
+  selectedProperty: SerializableProperty | null;
   loading: boolean;
   error: string | null;
+  
+  // Pagination
   pagination: {
     page: number;
     limit: number;
@@ -63,17 +148,102 @@ interface PropertyState {
     hasNext: boolean;
     hasPrev: boolean;
   } | null;
+  
+  // Filters
   filter: 'all' | 'available' | 'expensive';
+  searchFilters: {
+    search: string;
+    minPrice: number;
+    maxPrice: number;
+    propertyType: string;
+  };
+  
+  // Cache management
+  cache: {
+    timestamp: number;
+    ttl: number; // Time to live in milliseconds (5 minutes)
+    filters: Record<string, unknown>;
+    needsRefresh: boolean;
+  };
 }
 
 // Initial state
 const initialState: PropertyState = {
-  properties: [],
+  // Normalized data
+  byId: {},
+  allIds: [],
+  filteredIds: [],
+  
+  // UI state
   selectedProperty: null,
   loading: false,
   error: null,
+  
+  // Pagination
   pagination: null,
+  
+  // Filters
   filter: 'all',
+  searchFilters: {
+    search: '',
+    minPrice: 0,
+    maxPrice: 5000000,
+    propertyType: '',
+  },
+  
+  // Cache
+  cache: {
+    timestamp: 0,
+    ttl: 5 * 60 * 1000, // 5 minutes
+    filters: {},
+    needsRefresh: true,
+  },
+};
+
+// Helper function to apply all filters
+const applyFilters = (state: PropertyState) => {
+  state.filteredIds = state.allIds.filter(id => {
+    const propertyData = state.byId[id];
+    if (!propertyData) return false;
+    
+    // Convert to Property instance for business logic
+    const property = serializableToProperty(propertyData);
+    
+    // Apply basic filter (available/expensive)
+    switch (state.filter) {
+      case 'available':
+        if (!property.isAvailable()) return false;
+        break;
+      case 'expensive':
+        if (!property.isExpensive()) return false;
+        break;
+    }
+    
+    // Apply search filter
+    if (state.searchFilters.search) {
+      const searchTerm = state.searchFilters.search.toLowerCase();
+      const matchesSearch = 
+        property.name.toLowerCase().includes(searchTerm) ||
+        property.description.toLowerCase().includes(searchTerm) ||
+        property.location.toLowerCase().includes(searchTerm);
+      
+      if (!matchesSearch) return false;
+    }
+    
+    // Apply price range filter
+    if (property.price < state.searchFilters.minPrice || 
+        property.price > state.searchFilters.maxPrice) {
+      return false;
+    }
+    
+    // Apply property type filter
+    if (state.searchFilters.propertyType && 
+        property.propertyType !== state.searchFilters.propertyType) {
+      return false;
+    }
+    
+    return true;
+  });
 };
 
 // Property slice
@@ -82,17 +252,43 @@ const propertySlice = createSlice({
   initialState,
   reducers: {
     setSelectedProperty: (state, action: PayloadAction<Property | null>) => {
-      state.selectedProperty = action.payload;
+      state.selectedProperty = action.payload ? propertyToSerializable(action.payload) : null;
     },
     setFilter: (state, action: PayloadAction<'all' | 'available' | 'expensive'>) => {
       state.filter = action.payload;
+      applyFilters(state);
+    },
+    setSearchFilters: (state, action: PayloadAction<Partial<PropertyState['searchFilters']>>) => {
+      state.searchFilters = { ...state.searchFilters, ...action.payload };
+      applyFilters(state);
     },
     clearError: (state) => {
       state.error = null;
     },
+    clearSearchFilters: (state) => {
+      state.searchFilters = {
+        search: '',
+        minPrice: 0,
+        maxPrice: 5000000,
+        propertyType: '',
+      };
+      applyFilters(state);
+    },
     clearProperties: (state) => {
-      state.properties = [];
+      state.byId = {};
+      state.allIds = [];
+      state.filteredIds = [];
       state.pagination = null;
+      state.cache.needsRefresh = true;
+    },
+    invalidateCache: (state) => {
+      state.cache.needsRefresh = true;
+      state.cache.timestamp = 0;
+    },
+    updateCache: (state, action: PayloadAction<{ filters: Record<string, unknown> }>) => {
+      state.cache.timestamp = Date.now();
+      state.cache.filters = action.payload.filters;
+      state.cache.needsRefresh = false;
     },
   },
   extraReducers: (builder) => {
@@ -104,9 +300,30 @@ const propertySlice = createSlice({
       })
       .addCase(fetchProperties.fulfilled, (state, action) => {
         state.loading = false;
-        state.properties = action.payload.data;
+        
+        // Properties are already in serializable format from thunk
+        const properties = action.payload.data;
+        const newById: Record<string, SerializableProperty> = {};
+        const newAllIds: string[] = [];
+        
+        properties.forEach(property => {
+          newById[property.id] = property;
+          newAllIds.push(property.id);
+        });
+        
+        // Update normalized state
+        state.byId = { ...state.byId, ...newById };
+        state.allIds = [...new Set([...state.allIds, ...newAllIds])]; // Avoid duplicates
+        
+        // Apply all filters
+        applyFilters(state);
+        
         state.pagination = action.payload.pagination;
         state.error = null;
+        
+        // Update cache
+        state.cache.timestamp = Date.now();
+        state.cache.needsRefresh = false;
       })
       .addCase(fetchProperties.rejected, (state, action) => {
         state.loading = false;
@@ -121,8 +338,25 @@ const propertySlice = createSlice({
       })
       .addCase(fetchAvailableProperties.fulfilled, (state, action) => {
         state.loading = false;
-        state.properties = action.payload;
+        
+        // Properties are already in serializable format from thunk
+        const properties = action.payload;
+        const newById: Record<string, SerializableProperty> = {};
+        const newAllIds: string[] = [];
+        
+        properties.forEach(property => {
+          newById[property.id] = property;
+          newAllIds.push(property.id);
+        });
+        
+        // Update normalized state
+        state.byId = { ...state.byId, ...newById };
+        state.allIds = [...new Set([...state.allIds, ...newAllIds])];
+        state.filteredIds = newAllIds; // Available properties are already filtered
+        
         state.error = null;
+        state.cache.timestamp = Date.now();
+        state.cache.needsRefresh = false;
       })
       .addCase(fetchAvailableProperties.rejected, (state, action) => {
         state.loading = false;
@@ -137,8 +371,25 @@ const propertySlice = createSlice({
       })
       .addCase(fetchExpensiveProperties.fulfilled, (state, action) => {
         state.loading = false;
-        state.properties = action.payload;
+        
+        // Properties are already in serializable format from thunk
+        const properties = action.payload;
+        const newById: Record<string, SerializableProperty> = {};
+        const newAllIds: string[] = [];
+        
+        properties.forEach(property => {
+          newById[property.id] = property;
+          newAllIds.push(property.id);
+        });
+        
+        // Update normalized state
+        state.byId = { ...state.byId, ...newById };
+        state.allIds = [...new Set([...state.allIds, ...newAllIds])];
+        state.filteredIds = newAllIds; // Expensive properties are already filtered
+        
         state.error = null;
+        state.cache.timestamp = Date.now();
+        state.cache.needsRefresh = false;
       })
       .addCase(fetchExpensiveProperties.rejected, (state, action) => {
         state.loading = false;
@@ -169,8 +420,37 @@ const propertySlice = createSlice({
       })
       .addCase(createProperty.fulfilled, (state, action) => {
         state.loading = false;
-        state.properties.unshift(action.payload); // Add to beginning of array
+        
+        // Property is already in serializable format from thunk
+        const newProperty = action.payload;
+        state.byId[newProperty.id] = newProperty;
+        
+        // Add to allIds if not already present
+        if (!state.allIds.includes(newProperty.id)) {
+          state.allIds.unshift(newProperty.id); // Add to beginning
+        }
+        
+        // Add to filteredIds if it matches current filter
+        // Convert to Property instance for business logic
+        const propertyInstance = serializableToProperty(newProperty);
+        const shouldInclude = (() => {
+          switch (state.filter) {
+            case 'available':
+              return propertyInstance.isAvailable();
+            case 'expensive':
+              return propertyInstance.isExpensive();
+            default:
+              return true;
+          }
+        })();
+        
+        if (shouldInclude && !state.filteredIds.includes(newProperty.id)) {
+          state.filteredIds.unshift(newProperty.id);
+        }
+        
         state.error = null;
+        state.cache.timestamp = Date.now();
+        state.cache.needsRefresh = true; // New property added, cache needs refresh
       })
       .addCase(createProperty.rejected, (state, action) => {
         state.loading = false;
@@ -182,8 +462,12 @@ const propertySlice = createSlice({
 export const {
   setSelectedProperty,
   setFilter,
+  setSearchFilters,
   clearError,
+  clearSearchFilters,
   clearProperties,
+  invalidateCache,
+  updateCache,
 } = propertySlice.actions;
 
 export default propertySlice.reducer;

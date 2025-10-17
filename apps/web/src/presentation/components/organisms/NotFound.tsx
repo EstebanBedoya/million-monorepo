@@ -14,7 +14,6 @@ export interface NotFoundProps {
 export const NotFound = ({ 
   title = 'Property Not Found',
   message = "We couldn't find the property you're looking for. It may have been removed or is no longer available.",
-  showSearchButton = true
 }: NotFoundProps) => {
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -43,21 +42,12 @@ export const NotFound = ({
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/">
+          <Link href="/properties">
             <Button className="w-full sm:w-auto">
               <Icon icon={Home} size="sm" className="mr-2" />
-              Back to Home
+              Back to Properties
             </Button>
           </Link>
-          
-          {showSearchButton && (
-            <Link href="/?search=">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Icon icon={Search} size="sm" className="mr-2" />
-                Search Properties
-              </Button>
-            </Link>
-          )}
         </div>
       </div>
     </div>

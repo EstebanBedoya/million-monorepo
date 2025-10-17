@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { MockPropertyType } from '../../../domain/schemas/property.schema';
+import { Property } from '../../../domain/entities/Property';
 import { Image } from '../atoms/Image';
 import { Badge } from '../atoms/Badge';
 import { Price } from '../atoms/Price';
@@ -10,8 +10,8 @@ import { LocationInfo } from '../molecules/LocationInfo';
 import { PropertyDetails } from '../molecules/PropertyDetails';
 
 export interface PropertyCardProps {
-  property: MockPropertyType;
-  onViewDetails?: (property: MockPropertyType) => void;
+  property: Property;
+  onViewDetails?: (property: Property) => void;
 }
 
 export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
@@ -29,7 +29,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
     <article className="card-elevated overflow-hidden group cursor-pointer" role="article">
       <div className="relative h-64 overflow-hidden bg-secondary/10">
         <Image
-          src={property.image || '/placeholder-property.jpg'}
+          src={property.images[0]}
           alt={property.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -56,8 +56,7 @@ export function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
         </h3>
 
         <LocationInfo 
-          address={property.address}
-          city={property.city}
+          address={property.location}
           className="mb-4"
         />
 

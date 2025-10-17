@@ -1,5 +1,5 @@
 import { PropertyRepository, PaginationOptions, PaginatedResult } from '../../domain/repositories/PropertyRepository';
-import { Property, Location, Coordinates } from '../../domain/entities/Property';
+import { Property, PropertyType, PropertyStatus, AreaUnit } from '../../domain/entities/Property';
 import { PropertyApiClient } from '../api/PropertyApiClient';
 import { PropertyDto } from '../../../../../shared/contracts/property.dto';
 
@@ -105,51 +105,76 @@ export class PropertyRepositoryImpl implements PropertyRepository {
   }
 
   // Mapper methods
-  private mapDtoToEntity(dto: PropertyDto): Property {
-    // Create Location instance
-    const location = new Location(
-      dto.location.address,
-      dto.location.city,
-      dto.location.state,
-      dto.location.country,
-      dto.location.coordinates 
-        ? new Coordinates(dto.location.coordinates.lat, dto.location.coordinates.lng)
-        : undefined
-    );
+  private mapDtoToEntity(dto: any): Property {
+    // Handle both PropertyDto and MockPropertyDto formats
+    const isMockFormat = 'name' in dto && 'address' in dto;
+    
+    if (isMockFormat) {
+      // Map from MockPropertyDto format
+      return new Property(
+        dto.id,
+        dto.name || 'Untitled Property', // Use name as title
+        `Beautiful property located at ${dto.address}, ${dto.city}`, // Generate description
+        dto.price,
+        'USD', // Default currency
+        `${dto.address}, ${dto.city}`, // Combine address and city as location
+        this.mapPropertyType(dto.propertyType),
+        dto.area || 0,
+        this.mapAreaUnit(dto.areaUnit),
+        [], // Default empty features array
+        dto.image ? [dto.image] : [], // Convert single image to array
+        PropertyStatus.AVAILABLE, // Default status
+        new Date(),
+        new Date(),
+        dto.bedrooms,
+        dto.bathrooms
+      );
+    } else {
+      // Map from PropertyDto format
+      return new Property(
+        dto.id,
+        dto.name,
+        dto.description,
+        dto.price,
+        dto.currency,
+        dto.location,
+        dto.propertyType as Property['propertyType'],
+        dto.area,
+        dto.areaUnit as Property['areaUnit'],
+        dto.features,
+        dto.images,
+        dto.status as Property['status'],
+        new Date(dto.createdAt),
+        new Date(dto.updatedAt),
+        dto.bedrooms,
+        dto.bathrooms
+      );
+    }
+  }
 
-    return new Property(
-      dto.id,
-      dto.title,
-      dto.description,
-      dto.price,
-      dto.currency,
-      location,
-      dto.propertyType as Property['propertyType'], // You might need to map this properly
-      dto.area,
-      dto.areaUnit as Property['areaUnit'], // You might need to map this properly
-      dto.features,
-      dto.images,
-      dto.status as Property['status'], // You might need to map this properly
-      new Date(dto.createdAt),
-      new Date(dto.updatedAt),
-      dto.bedrooms,
-      dto.bathrooms
-    );
+  private mapPropertyType(propertyType: string): PropertyType {
+    const typeMap: Record<string, PropertyType> = {
+      'House': PropertyType.HOUSE,
+      'Apartment': PropertyType.APARTMENT, 
+      'Villa': PropertyType.HOUSE,
+      'Condo': PropertyType.APARTMENT,
+      'Townhouse': PropertyType.HOUSE,
+      'Studio': PropertyType.APARTMENT
+    };
+    return typeMap[propertyType] || PropertyType.HOUSE;
+  }
+
+  private mapAreaUnit(areaUnit: string): AreaUnit {
+    return areaUnit === 'm²' ? AreaUnit.M2 : AreaUnit.SQFT;
   }
 
   private mapEntityToDto(entity: Property): Partial<PropertyDto> {
     return {
-      title: entity.title,
+      name: entity.name,
       description: entity.description,
       price: entity.price,
       currency: entity.currency,
-      location: {
-        address: entity.location.address,
-        city: entity.location.city,
-        state: entity.location.state,
-        country: entity.location.country,
-        coordinates: entity.location.coordinates
-      },
+      location: entity.location,
       propertyType: entity.propertyType as PropertyDto['propertyType'],
       bedrooms: entity.bedrooms,
       bathrooms: entity.bathrooms,
