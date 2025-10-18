@@ -9,13 +9,13 @@ export interface PriceSuggestionsProps {
 }
 
 const PRICE_RANGES = [
-  { label: 'Under $100K', min: 0, max: 100000 },
-  { label: '$100K - $250K', min: 100000, max: 250000 },
-  { label: '$250K - $500K', min: 250000, max: 500000 },
-  { label: '$500K - $750K', min: 500000, max: 750000 },
-  { label: '$750K - $1M', min: 750000, max: 1000000 },
-  { label: '$1M - $2M', min: 1000000, max: 2000000 },
-  { label: '$2M+', min: 2000000, max: 5000000 },
+  { label: 'Under $200M', min: 0, max: 200000000 },
+  { label: '$200M - $300M', min: 200000000, max: 300000000 },
+  { label: '$300M - $400M', min: 300000000, max: 400000000 },
+  { label: '$400M - $500M', min: 400000000, max: 500000000 },
+  { label: '$500M - $600M', min: 500000000, max: 600000000 },
+  { label: '$600M - $800M', min: 600000000, max: 800000000 },
+  { label: '$800M+', min: 800000000, max: 1000000000 },
 ];
 
 export const PriceSuggestions = ({ onSelect, className }: PriceSuggestionsProps) => {

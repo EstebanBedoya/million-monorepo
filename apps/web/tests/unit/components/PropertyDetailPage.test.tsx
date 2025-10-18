@@ -129,7 +129,7 @@ describe('PropertyDetailPage', () => {
     render(<PropertyDetailPage id="prop-456" />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/mock/properties/prop-456');
+      expect(global.fetch).toHaveBeenCalledWith('/api/properties/prop-456');
     });
   });
 

@@ -8,8 +8,8 @@ Implementation of a luxury real estate property listing application with elegant
 ### HU-2: Mock Data and DTO Contract ✅
 
 #### Acceptance Criteria
-- ✅ GET `/api/mock/properties` returns paginated JSON with property data
-- ✅ GET `/api/mock/properties/:id` returns individual property object
+- ✅ GET `/api/properties` returns paginated JSON with property data
+- ✅ GET `/api/properties/:id` returns individual property object
 - ✅ All responses validated with Zod schemas
 
 #### Implementation
@@ -23,8 +23,8 @@ Implementation of a luxury real estate property listing application with elegant
    - High-quality Unsplash images
 
 3. **API Routes**
-   - `/api/mock/properties/route.ts` - List with pagination & filters
-   - `/api/mock/properties/[id]/route.ts` - Individual property details
+   - `/api/properties/route.ts` - List with pagination & filters
+   - `/api/properties/[id]/route.ts` - Individual property details
    - Both routes include Zod validation
 
 4. **Shared Contracts** (`shared/contracts/property.dto.ts`)
@@ -219,7 +219,7 @@ npm test
 ```
 apps/web/src/
 ├── app/
-│   ├── api/mock/properties/         # API routes
+│   ├── api/properties/              # API routes
 │   ├── globals.css                  # Theme styles
 │   ├── layout.tsx                   # Root layout with fonts
 │   └── page.tsx                     # Home page
@@ -248,7 +248,7 @@ apps/web/src/
 
 ## API Endpoints
 
-### GET `/api/mock/properties`
+### GET `/api/properties`
 **Query Parameters:**
 - `page` (number): Page number (default: 1)
 - `limit` (number): Items per page (default: 10)
@@ -271,7 +271,7 @@ apps/web/src/
 }
 ```
 
-### GET `/api/mock/properties/:id`
+### GET `/api/properties/:id`
 **Response:**
 ```json
 {

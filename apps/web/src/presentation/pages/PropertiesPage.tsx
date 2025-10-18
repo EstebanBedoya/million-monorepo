@@ -73,7 +73,7 @@ function PropertiesPageContent({
     return {
       search: searchParams.get('search') || '',
       minPrice: Number(searchParams.get('minPrice')) || 0,
-      maxPrice: Number(searchParams.get('maxPrice')) || Number.MAX_SAFE_INTEGER,
+      maxPrice: Number(searchParams.get('maxPrice')) || 1000000000,
       propertyType: searchParams.get('propertyType') || '',
     };
   }, [searchParams]);
@@ -99,7 +99,7 @@ function PropertiesPageContent({
     
     if (newFilters.search) params.set('search', newFilters.search);
     if (newFilters.minPrice > 0) params.set('minPrice', newFilters.minPrice.toString());
-    if (newFilters.maxPrice < Number.MAX_SAFE_INTEGER) params.set('maxPrice', newFilters.maxPrice.toString());
+    if (newFilters.maxPrice < 1000000000) params.set('maxPrice', newFilters.maxPrice.toString());
     if (newFilters.propertyType) params.set('propertyType', newFilters.propertyType);
     if (page > 1) params.set('page', page.toString());
 
@@ -151,7 +151,7 @@ function PropertiesPageContent({
     const defaultFilters: FilterValues = {
       search: '',
       minPrice: 0,
-      maxPrice: Number.MAX_SAFE_INTEGER,
+      maxPrice: 1000000000,
       propertyType: '',
     };
     setFilters(defaultFilters);

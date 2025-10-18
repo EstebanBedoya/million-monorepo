@@ -22,7 +22,7 @@ export const PriceRange = ({
   onMinPriceChange,
   onMaxPriceChange,
   min = 0,
-  max = 5000000,
+  max = 1000000000,
   className
 }: PriceRangeProps) => {
   const formatNumberWithCommas = (value: string) => {

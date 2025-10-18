@@ -231,7 +231,7 @@ const initialState: PropertyState = {
   searchFilters: {
     search: '',
     minPrice: 0,
-    maxPrice: Number.MAX_SAFE_INTEGER, // Allow all prices by default
+    maxPrice: 1000000000,
     propertyType: '',
   },
   
@@ -282,7 +282,7 @@ const applyFilters = (state: PropertyState) => {
     
     // Apply property type filter
     if (state.searchFilters.propertyType && 
-        property.propertyType !== state.searchFilters.propertyType) {
+        property.propertyType.toLowerCase() !== state.searchFilters.propertyType.toLowerCase()) {
       return false;
     }
     
@@ -313,7 +313,7 @@ const propertySlice = createSlice({
       state.searchFilters = {
         search: '',
         minPrice: 0,
-        maxPrice: Number.MAX_SAFE_INTEGER,
+        maxPrice: 1000000000,
         propertyType: '',
       };
       applyFilters(state);

@@ -62,7 +62,7 @@ Para evaluar mejor su opción
   - Optional `onViewDetails` callback support
 
 ### 4. API Integration
-- Uses existing `/api/mock/properties/[id]` endpoint
+- Uses existing `/api/properties/[id]` endpoint
 - Proper error handling for 404 cases
 - Type-safe with Zod validation
 
@@ -140,7 +140,7 @@ Para evaluar mejor su opción
 ## Routes
 - **List**: `/` - Properties list page
 - **Detail**: `/properties/[id]` - Property detail page
-- **API**: `/api/mock/properties/[id]` - Property by ID endpoint (existing)
+- **API**: `/api/properties/[id]` - Property by ID endpoint (existing)
 
 ## Technology Stack
 - **Framework**: Next.js 14 (App Router)

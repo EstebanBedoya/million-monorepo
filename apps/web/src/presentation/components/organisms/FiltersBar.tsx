@@ -37,7 +37,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export function FiltersBar({ onFilterChange, defaultFilters }: FiltersBarProps) {
   const [search, setSearch] = useState(defaultFilters?.search || '');
   const [minPrice, setMinPrice] = useState(defaultFilters?.minPrice || 0);
-  const [maxPrice, setMaxPrice] = useState(defaultFilters?.maxPrice || 5000000);
+  const [maxPrice, setMaxPrice] = useState(defaultFilters?.maxPrice || 1000000000);
   const [propertyType, setPropertyType] = useState(defaultFilters?.propertyType || '');
   
   const isFirstRender = useRef(true);
@@ -68,11 +68,11 @@ export function FiltersBar({ onFilterChange, defaultFilters }: FiltersBarProps) 
   const handleClearFilters = useCallback(() => {
     setSearch('');
     setMinPrice(0);
-    setMaxPrice(5000000);
+    setMaxPrice(1000000000);
     setPropertyType('');
   }, []);
 
-  const hasActiveFilters = search || minPrice > 0 || maxPrice < 5000000 || propertyType;
+  const hasActiveFilters = search || minPrice > 0 || maxPrice < 1000000000 || propertyType;
 
   return (
     <div className="space-y-6">

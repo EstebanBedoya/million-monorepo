@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { MockPropertyType } from '../../domain/schemas/property.schema';
 import { PropertyDetailSkeleton } from '../components/molecules/PropertyDetailSkeleton';
 import { NotFound } from '../components/organisms/NotFound';
 import { Button } from '../components/atoms/Button';
@@ -11,13 +10,11 @@ import { ArrowLeft, Edit2, Trash2, Calendar, DollarSign, MapPin, Home } from 'lu
 import { Image } from '../components/atoms/Image';
 import { Badge } from '../components/atoms/Badge';
 import { Price } from '../components/atoms/Price';
-import { LocationInfo } from '../components/molecules/LocationInfo';
-import { PropertyDetails } from '../components/molecules/PropertyDetails';
 import { PropertyFormModal, PropertyFormData } from '../components/organisms/PropertyFormModal';
 import { ConfirmDialog } from '../components/atoms/ConfirmDialog';
-import { useAppDispatch } from '../../store/hooks';
-import { updateProperty, deleteProperty, SerializableProperty } from '../../store/slices/propertySlice';
-import { PropertyStatus, PropertyType, AreaUnit } from '../../domain/entities/Property';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { updateProperty, deleteProperty, fetchPropertyById, SerializableProperty } from '../../store/slices/propertySlice';
+import { PropertyType, AreaUnit } from '../../domain/entities/Property';
 
 export interface PropertyDetailPageProps {
   id: string;
@@ -27,9 +24,12 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   
-  const [property, setProperty] = useState<MockPropertyType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  // Use Redux selectors instead of local state
+  const { property, isLoading, error } = useAppSelector(state => ({
+    property: state.properties.selectedProperty,
+    isLoading: state.properties.loading,
+    error: state.properties.error
+  }));
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -37,36 +37,9 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
   const [selectedProperty, setSelectedProperty] = useState<SerializableProperty | null>(null);
 
   useEffect(() => {
-    const fetchProperty = async () => {
-      setLoading(true);
-      setNotFound(false);
-
-      try {
-        const response = await fetch(`/api/mock/properties/${id}`);
-        
-        if (response.status === 404) {
-          setNotFound(true);
-          setProperty(null);
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch property');
-        }
-
-        const data = await response.json();
-        setProperty(data);
-      } catch (error) {
-        console.error('Error fetching property:', error);
-        setNotFound(true);
-        setProperty(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProperty();
-  }, [id]);
+    // Use Redux action instead of direct fetch
+    dispatch(fetchPropertyById(id));
+  }, [dispatch, id]);
 
   const handleBack = () => {
     router.push('/');
@@ -78,18 +51,18 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
     const serializableProperty: SerializableProperty = {
       id: property.id,
       name: property.name,
-      description: property.name,
+      description: property.description,
       price: property.price,
-      currency: 'USD',
-      location: `${property.address}, ${property.city}`,
+      currency: property.currency,
+      location: property.location,
       propertyType: property.propertyType as PropertyType || PropertyType.HOUSE,
       area: property.area || 0,
       areaUnit: property.areaUnit === 'sqft' ? AreaUnit.SQFT : AreaUnit.M2,
-      features: [],
-      images: property.image ? [property.image] : [],
-      status: PropertyStatus.AVAILABLE,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      features: property.features,
+      images: property.images,
+      status: property.status,
+      createdAt: property.createdAt,
+      updatedAt: property.updatedAt,
       bedrooms: property.bedrooms,
       bathrooms: property.bathrooms,
     };
@@ -110,27 +83,21 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
         id: property.id,
         data: {
           name: data.name,
-          description: `${data.name} located at ${data.address}, ${data.city}`,
+          description: `${data.name} located at ${data.address}`,
           price: data.price,
           currency: 'USD',
-          location: `${data.address}, ${data.city}`,
-          propertyType: data.propertyType || 'house',
-          area: data.area || 0,
-          areaUnit: data.areaUnit === 'sqft' ? 'sqft' : 'm2',
+          location: data.address,
+          propertyType: 'house',
+          area: 0,
+          areaUnit: 'm2',
           features: [],
           images: data.image ? [data.image] : [],
           status: 'available',
-          bedrooms: data.bedrooms,
-          bathrooms: data.bathrooms,
         },
       })).unwrap();
 
-      // Refresh property data
-      const response = await fetch(`/api/mock/properties/${id}`);
-      if (response.ok) {
-        const updatedData = await response.json();
-        setProperty(updatedData);
-      }
+      // Refresh property data using Redux
+      dispatch(fetchPropertyById(id));
 
       setIsEditModalOpen(false);
       setSelectedProperty(null);
@@ -157,22 +124,14 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
     setIsDeleteDialogOpen(false);
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return <PropertyDetailSkeleton />;
   }
 
-  if (notFound || !property) {
+  if (error || !property) {
     return <NotFound />;
   }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -232,7 +191,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
 
               <div className="relative h-[350px] md:h-[450px] rounded-lg overflow-hidden bg-secondary/10 mb-6">
                 <Image
-                  src={property.image || '/placeholder-property.jpg'}
+                  src={property.images[0] || '/placeholder-property.jpg'}
                   alt={property.name}
                   fill
                   priority
@@ -259,8 +218,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                    </div>
                    <div>
                      <p className="text-sm text-secondary mb-1">Location</p>
-                     <p className="font-medium text-foreground">{property.city}</p>
-                     <p className="text-sm text-secondary">{property.address}</p>
+                     <p className="font-medium text-foreground">{property.location}</p>
                    </div>
                  </div>
  
@@ -286,18 +244,6 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                </div>
             </div>
 
-            <div className="card-elevated p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">
-                Property Specifications
-              </h3>
-              <PropertyDetails
-                bedrooms={property.bedrooms}
-                bathrooms={property.bathrooms}
-                area={property.area}
-                areaUnit={property.areaUnit}
-                className="p-4 bg-background border border-border rounded-lg"
-              />
-            </div>
 
             <div className="card-elevated p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">
@@ -306,29 +252,18 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-background rounded-lg border border-border">
                   <dt className="text-sm text-secondary mb-1">Full Address</dt>
-                  <dd className="font-medium text-foreground">{property.address}, {property.city}</dd>
+                  <dd className="font-medium text-foreground">{property.location}</dd>
                 </div>
 
-                {property.bedrooms !== undefined && (
-                  <div className="p-4 bg-background rounded-lg border border-border">
-                    <dt className="text-sm text-secondary mb-1">Bedrooms</dt>
-                    <dd className="font-medium text-foreground">{property.bedrooms}</dd>
-                  </div>
-                )}
+                <div className="p-4 bg-background rounded-lg border border-border">
+                  <dt className="text-sm text-secondary mb-1">Property Code</dt>
+                  <dd className="font-medium text-foreground">{property.id}</dd>
+                </div>
 
-                {property.bathrooms !== undefined && (
-                  <div className="p-4 bg-background rounded-lg border border-border">
-                    <dt className="text-sm text-secondary mb-1">Bathrooms</dt>
-                    <dd className="font-medium text-foreground">{property.bathrooms}</dd>
-                  </div>
-                )}
-
-                {property.area && (
-                  <div className="p-4 bg-background rounded-lg border border-border">
-                    <dt className="text-sm text-secondary mb-1">Total Area</dt>
-                    <dd className="font-medium text-foreground">{property.area} {property.areaUnit || 'm²'}</dd>
-                  </div>
-                )}
+                <div className="p-4 bg-background rounded-lg border border-border">
+                  <dt className="text-sm text-secondary mb-1">Year Built</dt>
+                  <dd className="font-medium text-foreground">N/A</dd>
+                </div>
               </dl>
             </div>
           </div>
@@ -382,15 +317,9 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
 
                   <div className="flex items-center justify-between py-2 border-t border-border">
                     <span className="text-sm text-secondary">Location</span>
-                    <span className="font-medium text-foreground text-right">{property.city}</span>
+                    <span className="font-medium text-foreground text-right">{property.location}</span>
                   </div>
 
-                  {property.area && (
-                    <div className="flex items-center justify-between py-2 border-t border-border">
-                      <span className="text-sm text-secondary">Area</span>
-                      <span className="font-medium text-foreground">{property.area} {property.areaUnit || 'm²'}</span>
-                    </div>
-                  )}
 
                   <div className="flex items-center justify-between py-2 border-t border-border">
                     <span className="text-sm text-secondary">Type</span>

@@ -118,24 +118,24 @@ export class PropertyRepositoryImpl implements PropertyRepository {
     const isNewBackendFormat = 'idProperty' in dto;
     
     if (isNewBackendFormat) {
-      // Map from new backend format
+      // Map from new backend format (.NET API)
       return new Property(
         dto.idProperty || dto.id,
         dto.name || 'Untitled Property',
         dto.name || 'Property description',
         dto.price || 0,
-        'COP',
+        'USD',
         dto.address || 'Unknown location',
         this.mapPropertyType('House'),
-        0,
+        0, // No area data in new API
         AreaUnit.M2,
-        [],
-        [],
+        [], // No features data in new API
+        dto.image ? [dto.image] : [], // Single image from new API
         PropertyStatus.AVAILABLE,
         dto.year ? new Date(dto.year, 0, 1) : new Date(),
         new Date(),
-        0,
-        0
+        0, // No bedrooms data in new API
+        0  // No bathrooms data in new API
       );
     }
     
