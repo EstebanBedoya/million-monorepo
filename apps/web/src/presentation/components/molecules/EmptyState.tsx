@@ -1,8 +1,8 @@
 'use client';
 
-import { Home } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { Search } from 'lucide-react';
 
 export interface EmptyStateProps {
   title?: string;
@@ -11,41 +11,39 @@ export interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ 
-  title = "No Properties Found",
-  message = "We couldn't find any properties matching your criteria. Try adjusting your filters.",
+export const EmptyState = ({
+  title = 'No Properties Found',
+  message = "We couldn't find any properties matching your criteria. Try adjusting your filters or search terms.",
   onReset,
   className
-}: EmptyStateProps) {
+}: EmptyStateProps) => {
   return (
-    <div className={`flex flex-col items-center justify-center py-16 px-4 text-center ${className}`} role="status">
-      {/* Icon */}
-      <div className="mb-6 p-6 rounded-full bg-secondary/10">
-        <Icon 
-          icon={Home} 
-          size="xl" 
-          className="text-secondary"
-          aria-hidden={true}
-        />
+    <div
+      className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="mb-4 rounded-full bg-secondary/10 p-4">
+        <Icon icon={Search} size="lg" className="text-secondary" />
       </div>
 
-      {/* Content */}
-      <h3 className="text-2xl font-semibold text-foreground mb-3">
+      <h3 className="mb-2 text-lg font-semibold text-foreground">
         {title}
       </h3>
-      <p className="text-secondary max-w-md mb-6">
+
+      <p className="mb-6 max-w-md text-sm text-secondary">
         {message}
       </p>
 
-      {/* Reset button */}
       {onReset && (
         <Button
           onClick={onReset}
+          variant="outline"
           aria-label="Clear all filters"
         >
-          Clear All Filters
+          Clear all filters
         </Button>
       )}
     </div>
   );
-}
+};

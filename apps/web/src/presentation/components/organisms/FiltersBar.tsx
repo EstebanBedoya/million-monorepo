@@ -16,6 +16,7 @@ export interface FilterValues {
 interface FiltersBarProps {
   onFilterChange: (filters: FilterValues) => void;
   defaultFilters?: Partial<FilterValues>;
+  skipInitialCall?: boolean;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -34,13 +35,13 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export function FiltersBar({ onFilterChange, defaultFilters }: FiltersBarProps) {
+export function FiltersBar({ onFilterChange, defaultFilters, skipInitialCall = true }: FiltersBarProps) {
   const [search, setSearch] = useState(defaultFilters?.search || '');
   const [minPrice, setMinPrice] = useState(defaultFilters?.minPrice || 0);
   const [maxPrice, setMaxPrice] = useState(defaultFilters?.maxPrice || 1000000000);
   const [propertyType, setPropertyType] = useState(defaultFilters?.propertyType || '');
-  
-  const isFirstRender = useRef(true);
+
+  const isFirstRender = useRef(skipInitialCall);
   const onFilterChangeRef = useRef(onFilterChange);
 
   const debouncedSearch = useDebounce(search, 400);
@@ -51,7 +52,7 @@ export function FiltersBar({ onFilterChange, defaultFilters }: FiltersBarProps) 
   }, [onFilterChange]);
 
   useEffect(() => {
-    // Skip first render to avoid calling on mount
+    // Skip first render if skipInitialCall is true
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;

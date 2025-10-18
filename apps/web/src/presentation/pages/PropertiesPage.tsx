@@ -310,6 +310,13 @@ function PropertiesPageContent({
       const address = locationParts[0]?.trim() || property.location;
       const city = locationParts.slice(1).join(',').trim() || 'Unknown City';
       
+      // Extract first image - handle both string array and object array
+      let firstImage = '/placeholder-property.jpg';
+      if (property.images && property.images.length > 0) {
+        const img = property.images[0];
+        firstImage = typeof img === 'string' ? img : img.file;
+      }
+      
       return {
         id: property.id,
         idOwner: 'owner-001',
@@ -317,7 +324,7 @@ function PropertiesPageContent({
         address: address,
         city: city,
         price: property.price,
-        image: property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg',
+        image: firstImage,
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
         area: property.area,
@@ -376,7 +383,7 @@ function PropertiesPageContent({
 
             {/* Results count and Create button */}
             {!loading && (
-              <div className="mb-6 flex items-center justify-between">
+              <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <p className="text-sm text-secondary">
                   {filteredPagination && filteredPagination.total > 0 ? (
                     <>
@@ -389,12 +396,12 @@ function PropertiesPageContent({
                 </p>
                 <button
                   onClick={handleCreateProperty}
-                  className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors shadow-sm"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:px-4 sm:py-2 bg-accent text-accent-foreground rounded-lg sm:rounded-md hover:bg-accent/90 transition-all shadow-md hover:shadow-lg font-medium"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Create Property
+                  <span className="sm:inline">Create Property</span>
                 </button>
               </div>
             )}

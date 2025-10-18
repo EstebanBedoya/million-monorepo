@@ -35,6 +35,7 @@ export const SearchInput = ({
         placeholder={placeholder}
         icon={<Icon icon={Search} size="md" />}
         className="pl-10"
+        aria-label={label}
       />
     </div>
   );

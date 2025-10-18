@@ -15,12 +15,33 @@ export interface SerializableProperty {
   area: number;
   areaUnit: AreaUnit;
   features: string[];
-  images: string[];
+  images: Array<{
+    idPropertyImage: string;
+    idProperty: string;
+    file: string;
+    enabled: boolean;
+  }> | string[];
   status: PropertyStatus;
   createdAt: string; // ISO string instead of Date
   updatedAt: string; // ISO string instead of Date
   bedrooms?: number;
   bathrooms?: number;
+  year?: number;
+  owner?: {
+    idOwner: string;
+    name: string;
+    address: string;
+    birthday: string;
+    photo: string;
+  };
+  traces?: Array<{
+    idPropertyTrace: string;
+    dateSale: string;
+    idProperty: string;
+    name: string;
+    tax: number;
+    value: number;
+  }>;
 }
 
 // Async thunks for property operations
@@ -143,12 +164,15 @@ const propertyToSerializable = (property: Property): SerializableProperty => ({
   area: property.area,
   areaUnit: property.areaUnit,
   features: property.features,
-  images: property.images,
+  images: property.images as any,
   status: property.status,
   createdAt: property.createdAt.toISOString(),
   updatedAt: property.updatedAt.toISOString(),
   bedrooms: property.bedrooms,
   bathrooms: property.bathrooms,
+  year: property.year,
+  owner: property.owner,
+  traces: property.traces,
 });
 
 const serializableToProperty = (data: SerializableProperty): Property => 

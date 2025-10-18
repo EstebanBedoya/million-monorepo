@@ -119,6 +119,35 @@ export class PropertyRepositoryImpl implements PropertyRepository {
     
     if (isNewBackendFormat) {
       // Map from new backend format (.NET API)
+      const images = dto.images?.map((img: any) => ({
+        idPropertyImage: img.idPropertyImage,
+        idProperty: img.idProperty,
+        file: img.file,
+        enabled: img.enabled
+      })) || (dto.image ? [{
+        idPropertyImage: 'img-0',
+        idProperty: dto.idProperty,
+        file: dto.image,
+        enabled: true
+      }] : []);
+
+      const owner = dto.owner ? {
+        idOwner: dto.owner.idOwner,
+        name: dto.owner.name,
+        address: dto.owner.address,
+        birthday: dto.owner.birthday,
+        photo: dto.owner.photo
+      } : undefined;
+
+      const traces = dto.traces?.map((trace: any) => ({
+        idPropertyTrace: trace.idPropertyTrace,
+        dateSale: trace.dateSale,
+        idProperty: trace.idProperty,
+        name: trace.name,
+        tax: trace.tax,
+        value: trace.value
+      })) || undefined;
+
       return new Property(
         dto.idProperty || dto.id,
         dto.name || 'Untitled Property',
@@ -127,15 +156,18 @@ export class PropertyRepositoryImpl implements PropertyRepository {
         'USD',
         dto.address || 'Unknown location',
         this.mapPropertyType('House'),
-        0, // No area data in new API
+        0,
         AreaUnit.M2,
-        [], // No features data in new API
-        dto.image ? [dto.image] : [], // Single image from new API
+        [],
+        images,
         PropertyStatus.AVAILABLE,
         dto.year ? new Date(dto.year, 0, 1) : new Date(),
         new Date(),
-        0, // No bedrooms data in new API
-        0  // No bathrooms data in new API
+        0,
+        0,
+        dto.year,
+        owner,
+        traces
       );
     }
     

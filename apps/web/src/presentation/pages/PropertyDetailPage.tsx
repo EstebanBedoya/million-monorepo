@@ -6,12 +6,13 @@ import { PropertyDetailSkeleton } from '../components/molecules/PropertyDetailSk
 import { NotFound } from '../components/organisms/NotFound';
 import { Button } from '../components/atoms/Button';
 import { Icon } from '../components/atoms/Icon';
-import { ArrowLeft, Edit2, Trash2, Calendar, DollarSign, MapPin, Home } from 'lucide-react';
-import { Image } from '../components/atoms/Image';
+import { ArrowLeft, Edit2, Trash2, Calendar, DollarSign, MapPin, Home, User, History } from 'lucide-react';
 import { Badge } from '../components/atoms/Badge';
 import { Price } from '../components/atoms/Price';
+import { Image } from '../components/atoms/Image';
 import { PropertyFormModal, PropertyFormData } from '../components/organisms/PropertyFormModal';
 import { ConfirmDialog } from '../components/atoms/ConfirmDialog';
+import { ImageCarousel } from '../components/molecules/ImageCarousel';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateProperty, deleteProperty, fetchPropertyById, SerializableProperty } from '../../store/slices/propertySlice';
 import { PropertyType, AreaUnit } from '../../domain/entities/Property';
@@ -132,7 +133,6 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
     return <NotFound />;
   }
 
-
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -189,15 +189,11 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                 )}
               </div>
 
-              <div className="relative h-[350px] md:h-[450px] rounded-lg overflow-hidden bg-secondary/10 mb-6">
-                <Image
-                  src={property.images[0] || '/placeholder-property.jpg'}
+              <div className="mb-6">
+                <ImageCarousel
+                  images={property.images || []}
                   alt={property.name}
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, 66vw"
-                  className="object-cover"
-                  fallbackSrc="/placeholder-property.jpg"
+                  className="h-[350px] md:h-[450px]"
                 />
               </div>
 
@@ -262,10 +258,114 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
 
                 <div className="p-4 bg-background rounded-lg border border-border">
                   <dt className="text-sm text-secondary mb-1">Year Built</dt>
-                  <dd className="font-medium text-foreground">N/A</dd>
+                  <dd className="font-medium text-foreground">{property.year || 'N/A'}</dd>
                 </div>
               </dl>
             </div>
+
+            {/* Owner Information Section */}
+            {property.owner && (
+              <div className="card-elevated p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-secondary/50 rounded-lg">
+                    <Icon icon={User} size="sm" className="text-accent" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Property Owner
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg border border-border">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-secondary/20 flex items-center justify-center">
+                      {property.owner.photo ? (
+                        <Image
+                          src={property.owner.photo}
+                          alt={property.owner.name}
+                          width={48}
+                          height={48}
+                          className="object-cover w-full h-full"
+                          fallbackSrc="/placeholder-property.jpg"
+                        />
+                      ) : (
+                        <Icon icon={User} size="sm" className="text-secondary" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{property.owner.name}</p>
+                      <p className="text-sm text-secondary">Owner ID: {property.owner.idOwner}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-background rounded-lg border border-border">
+                    <dt className="text-sm text-secondary mb-1">Owner Address</dt>
+                    <dd className="font-medium text-foreground">{property.owner.address}</dd>
+                  </div>
+
+                  <div className="p-4 bg-background rounded-lg border border-border">
+                    <dt className="text-sm text-secondary mb-1">Birthday</dt>
+                    <dd className="font-medium text-foreground">
+                      {property.owner.birthday ? new Date(property.owner.birthday).toLocaleDateString() : 'N/A'}
+                    </dd>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Transaction Traces Section */}
+            {property.traces && property.traces.length > 0 && (
+              <div className="card-elevated p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-secondary/50 rounded-lg">
+                    <Icon icon={History} size="sm" className="text-accent" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Transaction History
+                  </h3>
+                </div>
+                
+                <div className="space-y-4">
+                  {property.traces.map((trace, index) => (
+                    <div key={trace.idPropertyTrace || index} className="p-4 bg-background rounded-lg border border-border">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <dt className="text-sm text-secondary mb-1">Transaction ID</dt>
+                          <dd className="font-medium text-foreground text-sm">{trace.idPropertyTrace}</dd>
+                        </div>
+                        
+                        <div>
+                          <dt className="text-sm text-secondary mb-1">Sale Date</dt>
+                          <dd className="font-medium text-foreground">
+                            {trace.dateSale ? new Date(trace.dateSale).toLocaleDateString() : 'N/A'}
+                          </dd>
+                        </div>
+                        
+                        <div>
+                          <dt className="text-sm text-secondary mb-1">Value</dt>
+                          <dd className="font-medium text-foreground">
+                            ${trace.value?.toLocaleString() || 'N/A'}
+                          </dd>
+                        </div>
+                        
+                        <div>
+                          <dt className="text-sm text-secondary mb-1">Tax</dt>
+                          <dd className="font-medium text-foreground">
+                            ${trace.tax?.toLocaleString() || 'N/A'}
+                          </dd>
+                        </div>
+                      </div>
+                      
+                      {trace.name && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <dt className="text-sm text-secondary mb-1">Associated Name</dt>
+                          <dd className="font-medium text-foreground">{trace.name}</dd>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-1">
@@ -320,11 +420,31 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                     <span className="font-medium text-foreground text-right">{property.location}</span>
                   </div>
 
-
                   <div className="flex items-center justify-between py-2 border-t border-border">
                     <span className="text-sm text-secondary">Type</span>
                     <span className="font-medium text-foreground">{property.propertyType || 'N/A'}</span>
                   </div>
+
+                  {property.year && (
+                    <div className="flex items-center justify-between py-2 border-t border-border">
+                      <span className="text-sm text-secondary">Year</span>
+                      <span className="font-medium text-foreground">{property.year}</span>
+                    </div>
+                  )}
+
+                  {property.owner && (
+                    <div className="flex items-center justify-between py-2 border-t border-border">
+                      <span className="text-sm text-secondary">Owner</span>
+                      <span className="font-medium text-foreground text-right">{property.owner.name}</span>
+                    </div>
+                  )}
+
+                  {property.traces && property.traces.length > 0 && (
+                    <div className="flex items-center justify-between py-2 border-t border-border">
+                      <span className="text-sm text-secondary">Transactions</span>
+                      <span className="font-medium text-foreground">{property.traces.length}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
