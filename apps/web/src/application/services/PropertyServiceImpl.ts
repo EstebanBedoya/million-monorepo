@@ -70,6 +70,38 @@ export class PropertyServiceImpl implements PropertyService {
     return await this.propertyRepository.save(property);
   }
 
+  async updateProperty(property: Property): Promise<Property> {
+    if (!property.id || property.id.trim() === '') {
+      throw new Error('Property ID is required');
+    }
+    if (!property.name || property.name.trim() === '') {
+      throw new Error('Property name is required');
+    }
+    if (property.price <= 0) {
+      throw new Error('Property price must be greater than 0');
+    }
+
+    const existingProperty = await this.propertyRepository.findById(property.id);
+    if (!existingProperty) {
+      throw new Error('Property not found');
+    }
+
+    return await this.propertyRepository.update(property);
+  }
+
+  async deleteProperty(id: string): Promise<void> {
+    if (!id || id.trim() === '') {
+      throw new Error('Property ID is required');
+    }
+
+    const existingProperty = await this.propertyRepository.findById(id);
+    if (!existingProperty) {
+      throw new Error('Property not found');
+    }
+
+    await this.propertyRepository.delete(id);
+  }
+
   async getAvailableProperties(): Promise<Property[]> {
     const allProperties = await this.propertyRepository.findAll();
     return allProperties.filter(property => property.isAvailable());

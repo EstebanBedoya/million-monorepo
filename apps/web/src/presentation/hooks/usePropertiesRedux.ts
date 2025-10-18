@@ -58,16 +58,14 @@ export function usePropertiesRedux() {
   const loadProperties = useCallback((options: { page?: number; limit?: number } = {}) => {
     // Check cache validity before making request
     if (isCacheValid && !needsRefresh) {
-      console.log('Using cached properties data');
-      return;
+      return Promise.resolve();
     }
     
-    dispatch(fetchProperties(options));
+    return dispatch(fetchProperties(options)).unwrap();
   }, [dispatch, isCacheValid, needsRefresh]);
 
   const loadAvailableProperties = useCallback(() => {
     if (isCacheValid && !needsRefresh && currentFilter === 'available') {
-      console.log('Using cached available properties data');
       return;
     }
     
@@ -76,7 +74,6 @@ export function usePropertiesRedux() {
 
   const loadExpensiveProperties = useCallback(() => {
     if (isCacheValid && !needsRefresh && currentFilter === 'expensive') {
-      console.log('Using cached expensive properties data');
       return;
     }
     

@@ -21,6 +21,8 @@ export interface PropertyService {
   getProperty(id: string): Promise<Property | null>;
   getAllProperties(page?: number, limit?: number): Promise<PaginatedResult<Property>>;
   createProperty(propertyData: CreatePropertyData): Promise<Property>;
+  updateProperty(property: Property): Promise<Property>;
+  deleteProperty(id: string): Promise<void>;
   getAvailableProperties(): Promise<Property[]>;
   getExpensiveProperties(): Promise<Property[]>;
 }

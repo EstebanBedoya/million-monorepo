@@ -9,19 +9,25 @@ import { ErrorState } from './molecules/ErrorState';
 interface PropertyListProps {
   properties: MockPropertyType[];
   onPropertyClick?: (property: MockPropertyType) => void;
+  onPropertyEdit?: (property: MockPropertyType) => void;
+  onPropertyDelete?: (property: MockPropertyType) => void;
   loading?: boolean;
   error?: Error | string | null;
   onRetry?: () => void;
   onClearFilters?: () => void;
+  showActions?: boolean;
 }
 
 export function PropertyList({ 
   properties, 
   onPropertyClick, 
+  onPropertyEdit,
+  onPropertyDelete,
   loading, 
   error, 
   onRetry, 
-  onClearFilters 
+  onClearFilters,
+  showActions = true
 }: PropertyListProps) {
   if (error) {
     return <ErrorState error={error} onRetry={onRetry} />;
@@ -48,6 +54,9 @@ export function PropertyList({
           key={property.id}
           property={property}
           onViewDetails={onPropertyClick}
+          onEdit={onPropertyEdit}
+          onDelete={onPropertyDelete}
+          showActions={showActions}
         />
       ))}
     </div>

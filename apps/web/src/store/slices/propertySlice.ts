@@ -30,7 +30,6 @@ export const fetchProperties = createAsyncThunk(
     const container = Container.getInstance();
     const propertyService = container.get<PropertyService>('PropertyService');
     const result = await propertyService.getAllProperties(options.page, options.limit);
-    
     // Convert Property instances to serializable format
     return {
       data: result.data.map(propertyToSerializable),
@@ -84,6 +83,51 @@ export const createProperty = createAsyncThunk(
     
     // Convert Property instance to serializable format
     return propertyToSerializable(property);
+  }
+);
+
+export const updateProperty = createAsyncThunk(
+  'properties/updateProperty',
+  async ({ id, data }: { id: string; data: Partial<CreatePropertyData> }) => {
+    const container = Container.getInstance();
+    const propertyService = container.get<PropertyService>('PropertyService');
+    
+    const existingProperty = await propertyService.getProperty(id);
+    if (!existingProperty) {
+      throw new Error('Property not found');
+    }
+
+    const propertyToUpdate = Property.create({
+      id: existingProperty.id,
+      name: data.name || existingProperty.name,
+      description: data.description || existingProperty.description,
+      price: data.price !== undefined ? data.price : existingProperty.price,
+      currency: data.currency || existingProperty.currency,
+      location: data.location || existingProperty.location,
+      propertyType: data.propertyType || existingProperty.propertyType,
+      area: data.area !== undefined ? data.area : existingProperty.area,
+      areaUnit: data.areaUnit || existingProperty.areaUnit,
+      features: data.features || existingProperty.features,
+      images: data.images || existingProperty.images,
+      status: data.status || existingProperty.status,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
+      createdAt: existingProperty.createdAt.toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const updated = await propertyService.updateProperty(propertyToUpdate);
+    return propertyToSerializable(updated);
+  }
+);
+
+export const deleteProperty = createAsyncThunk(
+  'properties/deleteProperty',
+  async (id: string) => {
+    const container = Container.getInstance();
+    const propertyService = container.get<PropertyService>('PropertyService');
+    await propertyService.deleteProperty(id);
+    return id;
   }
 );
 
@@ -187,7 +231,7 @@ const initialState: PropertyState = {
   searchFilters: {
     search: '',
     minPrice: 0,
-    maxPrice: 5000000,
+    maxPrice: Number.MAX_SAFE_INTEGER, // Allow all prices by default
     propertyType: '',
   },
   
@@ -269,7 +313,7 @@ const propertySlice = createSlice({
       state.searchFilters = {
         search: '',
         minPrice: 0,
-        maxPrice: 5000000,
+        maxPrice: Number.MAX_SAFE_INTEGER,
         propertyType: '',
       };
       applyFilters(state);
@@ -455,6 +499,57 @@ const propertySlice = createSlice({
       .addCase(createProperty.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to create property';
+      });
+
+    // Update property
+    builder
+      .addCase(updateProperty.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProperty.fulfilled, (state, action) => {
+        state.loading = false;
+        
+        const updatedProperty = action.payload;
+        state.byId[updatedProperty.id] = updatedProperty;
+        
+        applyFilters(state);
+        
+        state.error = null;
+        state.cache.timestamp = Date.now();
+        state.cache.needsRefresh = true;
+      })
+      .addCase(updateProperty.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to update property';
+      });
+
+    // Delete property
+    builder
+      .addCase(deleteProperty.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteProperty.fulfilled, (state, action) => {
+        state.loading = false;
+        
+        const deletedId = action.payload;
+        
+        delete state.byId[deletedId];
+        state.allIds = state.allIds.filter(id => id !== deletedId);
+        state.filteredIds = state.filteredIds.filter(id => id !== deletedId);
+        
+        if (state.selectedProperty?.id === deletedId) {
+          state.selectedProperty = null;
+        }
+        
+        state.error = null;
+        state.cache.timestamp = Date.now();
+        state.cache.needsRefresh = true;
+      })
+      .addCase(deleteProperty.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to delete property';
       });
   },
 });

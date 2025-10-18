@@ -8,9 +8,13 @@ import { Sidebar } from '../components/organisms/Sidebar';
 import { Pagination } from '../components/organisms/Pagination';
 import { PaginationSkeleton } from '../components/molecules/PaginationSkeleton';
 import { FilterValues } from '../components/organisms/FiltersBar';
+import { PropertyFormModal, PropertyFormData } from '../components/organisms/PropertyFormModal';
+import { ConfirmDialog } from '../components/atoms/ConfirmDialog';
 import { usePropertiesRedux } from '../hooks/usePropertiesRedux';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { selectPaginatedProperties, selectFilteredPagination } from '../../store/selectors/propertySelectors';
+import { updateProperty, deleteProperty, createProperty, SerializableProperty } from '../../store/slices/propertySlice';
+import { PropertyStatus, PropertyType, AreaUnit } from '../../domain/entities/Property';
 
 interface PropertiesPageProps {
   initialProperties?: MockPropertyType[];
@@ -31,6 +35,7 @@ function PropertiesPageContent({
 }: PropertiesPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
   
   // Redux hooks
   const {
@@ -50,17 +55,25 @@ function PropertiesPageContent({
     isCacheValid,
     needsRefresh,
   } = usePropertiesRedux();
-  
+
   // Local state (UI only)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isChangingPage, setIsChangingPage] = useState(false);
+  
+  // CRUD modals state
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [selectedProperty, setSelectedProperty] = useState<SerializableProperty | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<MockPropertyType | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get filters from URL
   const getFiltersFromURL = useCallback((): FilterValues => {
     return {
       search: searchParams.get('search') || '',
       minPrice: Number(searchParams.get('minPrice')) || 0,
-      maxPrice: Number(searchParams.get('maxPrice')) || 5000000,
+      maxPrice: Number(searchParams.get('maxPrice')) || Number.MAX_SAFE_INTEGER,
       propertyType: searchParams.get('propertyType') || '',
     };
   }, [searchParams]);
@@ -86,7 +99,7 @@ function PropertiesPageContent({
     
     if (newFilters.search) params.set('search', newFilters.search);
     if (newFilters.minPrice > 0) params.set('minPrice', newFilters.minPrice.toString());
-    if (newFilters.maxPrice < 5000000) params.set('maxPrice', newFilters.maxPrice.toString());
+    if (newFilters.maxPrice < Number.MAX_SAFE_INTEGER) params.set('maxPrice', newFilters.maxPrice.toString());
     if (newFilters.propertyType) params.set('propertyType', newFilters.propertyType);
     if (page > 1) params.set('page', page.toString());
 
@@ -99,13 +112,10 @@ function PropertiesPageContent({
   const loadPropertiesData = useCallback(async (filterValues: FilterValues, page: number) => {
     // Check if we need to refresh data
     if (!isCacheValid || needsRefresh) {
-      console.log('Cache expired, loading fresh data');
       await loadProperties({ 
         page: 1, // Always load from page 1 to get all properties
         limit: 1000 // Load a large number to get all properties
       });
-    } else {
-      console.log('Using cached data');
     }
   }, [loadProperties, isCacheValid, needsRefresh]);
 
@@ -141,7 +151,7 @@ function PropertiesPageContent({
     const defaultFilters: FilterValues = {
       search: '',
       minPrice: 0,
-      maxPrice: 5000000,
+      maxPrice: Number.MAX_SAFE_INTEGER,
       propertyType: '',
     };
     setFilters(defaultFilters);
@@ -151,6 +161,108 @@ function PropertiesPageContent({
     clearFilters();
   }, [clearFilters, updateURL]);
 
+  // CRUD handlers
+  const handleCreateProperty = useCallback(() => {
+    setFormMode('create');
+    setSelectedProperty(null);
+    setIsFormModalOpen(true);
+  }, []);
+
+  const handleEditProperty = useCallback((property: MockPropertyType) => {
+    const serializableProperty: SerializableProperty = {
+      id: property.id,
+      name: property.name,
+      description: property.name,
+      price: property.price,
+      currency: 'USD',
+      location: `${property.address}, ${property.city}`,
+      propertyType: property.propertyType as PropertyType || PropertyType.HOUSE,
+      area: property.area || 0,
+      areaUnit: property.areaUnit === 'sqft' ? AreaUnit.SQFT : AreaUnit.M2,
+      features: [],
+      images: property.image ? [property.image] : [],
+      status: PropertyStatus.AVAILABLE,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+    };
+    setSelectedProperty(serializableProperty);
+    setFormMode('edit');
+    setIsFormModalOpen(true);
+  }, []);
+
+  const handleDeleteProperty = useCallback((property: MockPropertyType) => {
+    setPropertyToDelete(property);
+    setIsDeleteDialogOpen(true);
+  }, []);
+
+  const handleFormSubmit = async (data: PropertyFormData) => {
+    try {
+      if (formMode === 'create') {
+        await dispatch(createProperty({
+          name: data.name,
+          description: `${data.name} located at ${data.address}, ${data.city}`,
+          price: data.price,
+          currency: 'USD',
+          location: `${data.address}, ${data.city}`,
+          propertyType: data.propertyType || 'house',
+          area: data.area || 0,
+          areaUnit: data.areaUnit === 'sqft' ? 'sqft' : 'm2',
+          features: [],
+          images: data.image ? [data.image] : [],
+          status: 'available',
+          bedrooms: data.bedrooms,
+          bathrooms: data.bathrooms,
+        })).unwrap();
+      } else if (selectedProperty) {
+        await dispatch(updateProperty({
+          id: selectedProperty.id,
+          data: {
+            name: data.name,
+            description: `${data.name} located at ${data.address}, ${data.city}`,
+            price: data.price,
+            currency: 'USD',
+            location: `${data.address}, ${data.city}`,
+            propertyType: data.propertyType || 'house',
+            area: data.area || 0,
+            areaUnit: data.areaUnit === 'sqft' ? 'sqft' : 'm2',
+            features: [],
+            images: data.image ? [data.image] : [],
+            status: 'available',
+            bedrooms: data.bedrooms,
+            bathrooms: data.bathrooms,
+          },
+        })).unwrap();
+      }
+      setIsFormModalOpen(false);
+      setSelectedProperty(null);
+    } catch (error) {
+      console.error('Failed to save property:', error);
+      throw error;
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!propertyToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteProperty(propertyToDelete.id)).unwrap();
+      setIsDeleteDialogOpen(false);
+      setPropertyToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete property:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = useCallback(() => {
+    setIsDeleteDialogOpen(false);
+    setPropertyToDelete(null);
+  }, []);
+
   // Initial load from URL params
   useEffect(() => {
     const urlFilters = getFiltersFromURL();
@@ -158,15 +270,16 @@ function PropertiesPageContent({
     
     setFilters(urlFilters);
     
-    // Sync filters with Redux
-    updateSearchFilters({
-      search: urlFilters.search,
-      minPrice: urlFilters.minPrice,
-      maxPrice: urlFilters.maxPrice,
-      propertyType: urlFilters.propertyType || '',
+    // Load properties first, then apply filters
+    loadPropertiesData(urlFilters, page).then(() => {
+      // Sync filters with Redux after properties are loaded
+      updateSearchFilters({
+        search: urlFilters.search,
+        minPrice: urlFilters.minPrice,
+        maxPrice: urlFilters.maxPrice,
+        propertyType: urlFilters.propertyType || '',
+      });
     });
-    
-    loadPropertiesData(urlFilters, page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
@@ -180,24 +293,38 @@ function PropertiesPageContent({
   const filteredPagination = useAppSelector(selectFilteredPagination(currentPage, limit));
 
   const displayedProperties = useMemo(() => {
-    // Convert Redux properties to the expected format for PropertyList
-    return paginatedProperties.map((property: any) => ({
-      id: property.id,
-      name: property.name,
-      location: property.location,
-      price: property.price,
-      currency: property.currency,
-      propertyType: property.propertyType,
-      bedrooms: property.bedrooms || 0,
-      bathrooms: property.bathrooms || 0,
-      area: property.area,
-      areaUnit: property.areaUnit,
-      images: property.images,
-      status: property.status,
-      features: property.features,
-      createdAt: property.createdAt,
-      updatedAt: property.updatedAt,
-    }));
+    // Map PropertyType enum to MockPropertyType string
+    const mapPropertyType = (type: string): 'House' | 'Apartment' | 'Villa' | 'Condo' | 'Townhouse' | 'Studio' => {
+      const typeMap: Record<string, 'House' | 'Apartment' | 'Villa' | 'Condo' | 'Townhouse' | 'Studio'> = {
+        'house': 'House',
+        'apartment': 'Apartment',
+        'commercial': 'Condo',
+        'land': 'Villa',
+      };
+      return typeMap[type.toLowerCase()] || 'House';
+    };
+    
+    // Convert Redux properties to MockPropertyType format for PropertyList
+    return paginatedProperties.map((property) => {
+      const locationParts = property.location.split(',');
+      const address = locationParts[0]?.trim() || property.location;
+      const city = locationParts.slice(1).join(',').trim() || 'Unknown City';
+      
+      return {
+        id: property.id,
+        idOwner: 'owner-001',
+        name: property.name,
+        address: address,
+        city: city,
+        price: property.price,
+        image: property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg',
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        area: property.area,
+        areaUnit: property.areaUnit === 'm2' ? 'm²' as const : 'sqft' as const,
+        propertyType: mapPropertyType(property.propertyType),
+      };
+    });
   }, [paginatedProperties]);
 
   return (
@@ -247,9 +374,9 @@ function PropertiesPageContent({
               </button>
             </div>
 
-            {/* Results count */}
+            {/* Results count and Create button */}
             {!loading && (
-              <div className="mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <p className="text-sm text-secondary">
                   {filteredPagination && filteredPagination.total > 0 ? (
                     <>
@@ -260,6 +387,15 @@ function PropertiesPageContent({
                     'No properties found'
                   )}
                 </p>
+                <button
+                  onClick={handleCreateProperty}
+                  className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors shadow-sm"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Property
+                </button>
               </div>
             )}
 
@@ -270,6 +406,9 @@ function PropertiesPageContent({
               error={error}
               onRetry={() => loadProperties({ page: pagination?.page || 1, limit: 12 })}
               onClearFilters={handleClearFilters}
+              onPropertyEdit={handleEditProperty}
+              onPropertyDelete={handleDeleteProperty}
+              showActions={true}
             />
 
             {/* Pagination */}
@@ -300,6 +439,30 @@ function PropertiesPageContent({
           </div>
         </div>
       </footer>
+
+      {/* Modals */}
+      <PropertyFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => {
+          setIsFormModalOpen(false);
+          setSelectedProperty(null);
+        }}
+        onSubmit={handleFormSubmit}
+        property={selectedProperty}
+        mode={formMode}
+      />
+
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Property"
+        message={`Are you sure you want to delete "${propertyToDelete?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

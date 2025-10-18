@@ -81,4 +81,22 @@ export class PropertyApiClient {
 
     return await this.httpClient.post<PropertyDto>('/properties', propertyData, config);
   }
+
+  async updateProperty(id: string, propertyData: Partial<PropertyDto>): Promise<PropertyDto> {
+    const config: RequestConfig = {
+      retry: false,
+      skipLogging: false,
+    };
+
+    return await this.httpClient.put<PropertyDto>(`/properties/${id}`, propertyData, config);
+  }
+
+  async deleteProperty(id: string): Promise<void> {
+    const config: RequestConfig = {
+      retry: false,
+      skipLogging: false,
+    };
+
+    await this.httpClient.delete(`/properties/${id}`, config);
+  }
 }

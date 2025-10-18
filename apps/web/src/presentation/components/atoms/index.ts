@@ -9,3 +9,4 @@ export { Select } from './Select';
 export { Range } from './Range';
 export { Skeleton } from './Skeleton';
 export { Spinner } from './Spinner';
+export { ConfirmDialog } from './ConfirmDialog';

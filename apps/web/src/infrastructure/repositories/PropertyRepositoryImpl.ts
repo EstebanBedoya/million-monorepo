@@ -1,7 +1,6 @@
 import { PropertyRepository, PaginationOptions, PaginatedResult } from '../../domain/repositories/PropertyRepository';
 import { Property, PropertyType, PropertyStatus, AreaUnit } from '../../domain/entities/Property';
 import { PropertyApiClient } from '../api/PropertyApiClient';
-import { PropertyDto } from '../../../../../shared/contracts/property.dto';
 
 // Infrastructure implementation - handles data persistence with API
 export class PropertyRepositoryImpl implements PropertyRepository {
@@ -93,37 +92,71 @@ export class PropertyRepositoryImpl implements PropertyRepository {
   }
 
   async update(property: Property): Promise<Property> {
-    // Note: PropertyApiClient doesn't have update method yet
-    // For now, just return the property as-is
-    return property;
+    try {
+      const propertyDto = this.mapEntityToDto(property);
+      const updatedDto = await this.apiClient.updateProperty(property.id, propertyDto);
+      return this.mapDtoToEntity(updatedDto);
+    } catch (error) {
+      console.error('Error updating property:', error);
+      throw error;
+    }
   }
 
-  async delete(_id: string): Promise<void> {
-    // Note: PropertyApiClient doesn't have delete method yet
-    // For now, just log
-    console.log('Delete method not implemented yet');
+  async delete(id: string): Promise<void> {
+    try {
+      await this.apiClient.deleteProperty(id);
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      throw error;
+    }
   }
 
   // Mapper methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapDtoToEntity(dto: any): Property {
-    // Handle both PropertyDto and MockPropertyDto formats
-    const isMockFormat = 'name' in dto && 'address' in dto;
+    // Check if it's the new backend format with idProperty
+    const isNewBackendFormat = 'idProperty' in dto;
+    
+    if (isNewBackendFormat) {
+      // Map from new backend format
+      return new Property(
+        dto.idProperty || dto.id,
+        dto.name || 'Untitled Property',
+        dto.name || 'Property description',
+        dto.price || 0,
+        'COP',
+        dto.address || 'Unknown location',
+        this.mapPropertyType('House'),
+        0,
+        AreaUnit.M2,
+        [],
+        [],
+        PropertyStatus.AVAILABLE,
+        dto.year ? new Date(dto.year, 0, 1) : new Date(),
+        new Date(),
+        0,
+        0
+      );
+    }
+    
+    // Handle old MockPropertyDto format
+    const isMockFormat = 'name' in dto && 'address' in dto && !isNewBackendFormat;
     
     if (isMockFormat) {
       // Map from MockPropertyDto format
       return new Property(
         dto.id,
-        dto.name || 'Untitled Property', // Use name as title
-        `Beautiful property located at ${dto.address}, ${dto.city}`, // Generate description
+        dto.name || 'Untitled Property',
+        `Beautiful property located at ${dto.address}, ${dto.city}`,
         dto.price,
-        'USD', // Default currency
-        `${dto.address}, ${dto.city}`, // Combine address and city as location
+        'USD',
+        `${dto.address}, ${dto.city}`,
         this.mapPropertyType(dto.propertyType),
         dto.area || 0,
         this.mapAreaUnit(dto.areaUnit),
-        [], // Default empty features array
-        dto.image ? [dto.image] : [], // Convert single image to array
-        PropertyStatus.AVAILABLE, // Default status
+        [],
+        dto.image ? [dto.image] : [],
+        PropertyStatus.AVAILABLE,
         new Date(),
         new Date(),
         dto.bedrooms,
@@ -168,21 +201,20 @@ export class PropertyRepositoryImpl implements PropertyRepository {
     return areaUnit === 'm²' ? AreaUnit.M2 : AreaUnit.SQFT;
   }
 
-  private mapEntityToDto(entity: Property): Partial<PropertyDto> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private mapEntityToDto(entity: Property): any {
     return {
       name: entity.name,
-      description: entity.description,
+      address: entity.location.split(',')[0] || entity.location,
+      city: entity.location.split(',').slice(1).join(',').trim() || '',
       price: entity.price,
-      currency: entity.currency,
-      location: entity.location,
-      propertyType: entity.propertyType as PropertyDto['propertyType'],
+      idOwner: 'owner-001',
       bedrooms: entity.bedrooms,
       bathrooms: entity.bathrooms,
       area: entity.area,
-      areaUnit: entity.areaUnit as PropertyDto['areaUnit'],
-      features: entity.features,
-      images: entity.images,
-      status: entity.status as PropertyDto['status']
+      areaUnit: entity.areaUnit === 'm2' ? 'm²' : 'sqft',
+      propertyType: entity.propertyType,
+      image: entity.images[0] || ''
     };
   }
 }
