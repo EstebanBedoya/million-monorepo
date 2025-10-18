@@ -1,23 +1,30 @@
+using MongoDB.Bson.Serialization.Attributes;
+
 namespace Domain.Entities;
 
 public class Property
 {
-    public string Id { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+    [BsonId]
+    [BsonElement("_id")]
+    public string IdProperty { get; set; } = string.Empty;
+
+    [BsonElement("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [BsonElement("address")]
+    public string Address { get; set; } = string.Empty;
+
+    [BsonElement("price")]
     public decimal Price { get; set; }
-    public string Currency { get; set; } = "USD";
-    public Location Location { get; set; } = new();
-    public PropertyType PropertyType { get; set; }
-    public int? Bedrooms { get; set; }
-    public int? Bathrooms { get; set; }
-    public decimal Area { get; set; }
-    public AreaUnit AreaUnit { get; set; } = AreaUnit.SquareMeters;
-    public List<string> Features { get; set; } = new();
-    public List<string> Images { get; set; } = new();
-    public PropertyStatus Status { get; set; } = PropertyStatus.Available;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("codeInternal")]
+    public string CodeInternal { get; set; } = string.Empty;
+
+    [BsonElement("year")]
+    public int Year { get; set; }
+
+    [BsonElement("idOwner")]
+    public string IdOwner { get; set; } = string.Empty;
 
     public void UpdatePrice(decimal newPrice)
     {
@@ -25,54 +32,33 @@ public class Property
             throw new ArgumentException("Price must be greater than zero");
             
         Price = newPrice;
-        UpdatedAt = DateTime.UtcNow;
     }
 
-    public void MarkAsSold()
+    public void UpdateInfo(string name, string address, decimal price, string codeInternal, int year, string idOwner)
     {
-        Status = PropertyStatus.Sold;
-        UpdatedAt = DateTime.UtcNow;
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name cannot be empty");
+        
+        if (string.IsNullOrWhiteSpace(address))
+            throw new ArgumentException("Address cannot be empty");
+        
+        if (price <= 0)
+            throw new ArgumentException("Price must be greater than zero");
+        
+        if (string.IsNullOrWhiteSpace(codeInternal))
+            throw new ArgumentException("CodeInternal cannot be empty");
+        
+        if (year < 1800 || year > DateTime.UtcNow.Year + 10)
+            throw new ArgumentException("Year must be valid");
+        
+        if (string.IsNullOrWhiteSpace(idOwner))
+            throw new ArgumentException("IdOwner cannot be empty");
+
+        Name = name;
+        Address = address;
+        Price = price;
+        CodeInternal = codeInternal;
+        Year = year;
+        IdOwner = idOwner;
     }
-
-    public void MarkAsRented()
-    {
-        Status = PropertyStatus.Rented;
-        UpdatedAt = DateTime.UtcNow;
-    }
-}
-
-public class Location
-{
-    public string Address { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string State { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
-    public Coordinates? Coordinates { get; set; }
-}
-
-public class Coordinates
-{
-    public double Lat { get; set; }
-    public double Lng { get; set; }
-}
-
-public enum PropertyType
-{
-    Apartment,
-    House,
-    Commercial,
-    Land
-}
-
-public enum AreaUnit
-{
-    SquareMeters,
-    SquareFeet
-}
-
-public enum PropertyStatus
-{
-    Available,
-    Sold,
-    Rented
 }

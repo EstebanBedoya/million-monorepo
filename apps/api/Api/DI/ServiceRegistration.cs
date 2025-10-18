@@ -1,7 +1,10 @@
-using Application.Abstractions;
+using Application.Mappings;
+using Domain.Repositories;
+using FluentValidation;
+using Infrastructure.Configuration;
+using Infrastructure.Mappings;
+using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Api.DI;
 
@@ -9,26 +12,38 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Add MediatR
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Application.Application).Assembly));
+        var applicationAssembly = typeof(MappingProfile).Assembly;
         
-        // Add AutoMapper
-        services.AddAutoMapper(typeof(Application.Application));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(applicationAssembly));
         
-        // Add FluentValidation
-        services.AddValidatorsFromAssembly(typeof(Application.Application).Assembly);
+        services.AddAutoMapper(applicationAssembly);
+        
+        services.AddValidatorsFromAssembly(applicationAssembly);
         
         return services;
     }
 
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add MongoDB
         services.Configure<MongoSettings>(configuration.GetSection("MongoSettings"));
-        services.AddSingleton<MongoContext>();
         
-        // Add repositories
+        var connectionString = configuration.GetConnectionString("MongoDB");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            services.Configure<MongoSettings>(options =>
+            {
+                options.ConnectionString = connectionString;
+            });
+        }
+        
+        MongoMappings.Configure();
+        
+        services.AddSingleton<MongoDbContext>();
+        
+        services.AddScoped<IOwnerRepository, OwnerRepository>();
         services.AddScoped<IPropertyRepository, PropertyRepository>();
+        services.AddScoped<IPropertyImageRepository, PropertyImageRepository>();
+        services.AddScoped<IPropertyTraceRepository, PropertyTraceRepository>();
         
         return services;
     }
