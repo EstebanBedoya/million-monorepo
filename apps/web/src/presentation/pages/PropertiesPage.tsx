@@ -2,19 +2,20 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MockPropertyType } from '../../domain/schemas/property.schema';
-import { PropertyList } from '../components/PropertyList';
-import { Sidebar } from '../components/organisms/Sidebar';
-import { Pagination } from '../components/organisms/Pagination';
-import { PaginationSkeleton } from '../components/molecules/PaginationSkeleton';
-import { FilterValues } from '../components/organisms/FiltersBar';
-import { PropertyFormModal, PropertyFormData } from '../components/organisms/PropertyFormModal';
-import { ConfirmDialog } from '../components/atoms/ConfirmDialog';
-import { usePropertiesRedux } from '../hooks/usePropertiesRedux';
-import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { selectPaginatedProperties, selectFilteredPagination } from '../../store/selectors/propertySelectors';
-import { updateProperty, deleteProperty, createProperty, SerializableProperty } from '../../store/slices/propertySlice';
-import { PropertyStatus, PropertyType, AreaUnit } from '../../domain/entities/Property';
+import { MockPropertyType } from '@/domain/schemas/property.schema';
+import { PropertyList } from '@/presentation/components/PropertyList';
+import { Sidebar } from '@/presentation/components/organisms/Sidebar';
+import { Pagination } from '@/presentation/components/organisms/Pagination';
+import { PaginationSkeleton } from '@/presentation/components/molecules/PaginationSkeleton';
+import { FilterValues } from '@/presentation/components/organisms/FiltersBar';
+import { PropertyFormModal, PropertyFormData } from '@/presentation/components/organisms/PropertyFormModal';
+import { ConfirmDialog } from '@/presentation/components/atoms/ConfirmDialog';
+import { usePropertiesRedux } from '@/presentation/hooks/usePropertiesRedux';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { selectPaginatedProperties, selectFilteredPagination } from '@/store/selectors/propertySelectors';
+import { updateProperty, deleteProperty, createProperty, SerializableProperty } from '@/store/slices/propertySlice';
+import { PropertyStatus, PropertyType, AreaUnit } from '@/domain/entities/Property';
+import { useDictionary, useLocale } from '@/i18n/client';
 
 interface PropertiesPageProps {
   initialProperties?: MockPropertyType[];
@@ -36,6 +37,14 @@ function PropertiesPageContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const dict = useDictionary();
+  const lang = useLocale();
+  const [mounted, setMounted] = useState(false);
+
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // Redux hooks
   const {
@@ -104,9 +113,9 @@ function PropertiesPageContent({
     if (page > 1) params.set('page', page.toString());
 
     const queryString = params.toString();
-    const url = queryString ? `/properties?${queryString}` : '/properties';
+    const url = queryString ? `/${lang}/properties?${queryString}` : `/${lang}/properties`;
     routerRef.current.push(url, { scroll: false });
-  }, []);
+  }, [lang]);
 
   // Load properties using Redux (load all properties once)
   const loadPropertiesData = useCallback(async (filterValues: FilterValues, _page: number) => {
@@ -342,13 +351,13 @@ function PropertiesPageContent({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-foreground mb-3">
-              MILLION
+              {dict.header.title}
             </h1>
             <p className="text-xl text-accent mb-2">
-              Find Your Dream Home
+              {dict.header.subtitle}
             </p>
             <p className="text-secondary max-w-2xl mx-auto">
-              Discover exceptional properties with elegant design and unparalleled luxury
+              {dict.header.description}
             </p>
           </div>
         </div>
@@ -377,21 +386,21 @@ function PropertiesPageContent({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
                 </svg>
-                Filters
+                {dict.filters.mobileFilters}
               </button>
             </div>
 
             {/* Results count and Create button */}
-            {!loading && (
+            {!loading && mounted && (
               <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <p className="text-sm text-secondary">
                   {filteredPagination && filteredPagination.total > 0 ? (
                     <>
-                      Showing <span className="font-medium text-foreground">{displayedProperties.length}</span> of{' '}
-                      <span className="font-medium text-foreground">{filteredPagination.total}</span> properties
+                      {dict.properties.showing} <span className="font-medium text-foreground">{displayedProperties.length}</span> {dict.properties.of}{' '}
+                      <span className="font-medium text-foreground">{filteredPagination.total}</span> {dict.properties.properties}
                     </>
                   ) : (
-                    'No properties found'
+                    dict.properties.noProperties
                   )}
                 </p>
                 <button
@@ -401,7 +410,7 @@ function PropertiesPageContent({
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span className="sm:inline">Create Property</span>
+                  <span className="sm:inline">{dict.properties.createProperty}</span>
                 </button>
               </div>
             )}
@@ -422,7 +431,7 @@ function PropertiesPageContent({
             {loading || isChangingPage ? (
               <PaginationSkeleton />
             ) : (
-              displayedProperties.length > 0 && filteredPagination && (
+              mounted && displayedProperties.length > 0 && filteredPagination && (
                 <div className="mt-8">
                   <Pagination
                     currentPage={filteredPagination.page}
@@ -442,7 +451,7 @@ function PropertiesPageContent({
       <footer className="bg-card border-t border-border mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-sm text-secondary">
-            <p>© 2025 MILLION. Luxury Real Estate Platform.</p>
+            <p>{dict.footer.copyright}</p>
           </div>
         </div>
       </footer>
@@ -461,10 +470,10 @@ function PropertiesPageContent({
 
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
-        title="Delete Property"
-        message={`Are you sure you want to delete "${propertyToDelete?.name}"? This action cannot be undone.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={dict.properties.deleteProperty}
+        message={`${dict.properties.confirmDelete} "${propertyToDelete?.name}"? ${dict.properties.deleteWarning}`}
+        confirmLabel={dict.common.delete}
+        cancelLabel={dict.common.cancel}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         variant="danger"

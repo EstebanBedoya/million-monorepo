@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { MockPropertyType } from '../../domain/schemas/property.schema';
 import { PropertyCard } from './organisms/PropertyCard';
 import { PropertyCardSkeleton } from './molecules/PropertyCardSkeleton';
@@ -29,6 +30,23 @@ export function PropertyList({
   onClearFilters,
   showActions = true
 }: PropertyListProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show loading skeleton during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <PropertyCardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
+
   if (error) {
     return <ErrorState error={error} onRetry={onRetry} />;
   }

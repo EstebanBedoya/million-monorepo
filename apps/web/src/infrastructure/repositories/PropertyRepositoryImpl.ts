@@ -1,7 +1,7 @@
-import { PropertyRepository, PaginationOptions, PaginatedResult } from '../../domain/repositories/PropertyRepository';
-import { Property, PropertyType, PropertyStatus, AreaUnit } from '../../domain/entities/Property';
-import { PropertyApiClient } from '../api/PropertyApiClient';
-import { PropertyDto } from '../../../../../shared/contracts/property.dto';
+import { PropertyRepository, PaginationOptions, PaginatedResult } from '@/domain/repositories/PropertyRepository';
+import { Property, PropertyType, PropertyStatus, AreaUnit } from '@/domain/entities/Property';
+import { PropertyApiClient } from '@/infrastructure/api/PropertyApiClient';
+import { PropertyDto } from '@/shared/contracts/property.dto';
 
 // Infrastructure implementation - handles data persistence with API
 export class PropertyRepositoryImpl implements PropertyRepository {

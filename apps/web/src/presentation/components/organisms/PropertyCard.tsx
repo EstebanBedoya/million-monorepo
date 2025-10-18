@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { MockPropertyType } from '../../../domain/schemas/property.schema';
-import { Image } from '../atoms/Image';
-import { Badge } from '../atoms/Badge';
-import { Price } from '../atoms/Price';
-import { Button } from '../atoms/Button';
-import { LocationInfo } from '../molecules/LocationInfo';
-import { PropertyDetails } from '../molecules/PropertyDetails';
+import { MockPropertyType } from '@/domain/schemas/property.schema';
+import { Image } from '@/presentation/components/atoms/Image';
+import { Badge } from '@/presentation/components/atoms/Badge';
+import { Price } from '@/presentation/components/atoms/Price';
+import { Button } from '@/presentation/components/atoms/Button';
+import { LocationInfo } from '@/presentation/components/molecules/LocationInfo';
+import { PropertyDetails } from '@/presentation/components/molecules/PropertyDetails';
+import { useDictionary, useLocale } from '@/i18n/client';
 
 export interface PropertyCardProps {
   property: MockPropertyType;
@@ -22,12 +23,14 @@ export function PropertyCard({
   onViewDetails,
 }: PropertyCardProps) {
   const router = useRouter();
+  const dict = useDictionary();
+  const lang = useLocale();
 
   const handleViewDetails = () => {
     if (onViewDetails) {
       onViewDetails(property);
     } else {
-      router.push(`/properties/${property.id}`);
+      router.push(`/${lang}/properties/${property.id}`);
     }
   };
 
@@ -81,9 +84,9 @@ export function PropertyCard({
         <Button
           onClick={handleViewDetails}
           className="w-full mt-4"
-          aria-label={`View details for ${property.name}`}
+          aria-label={`${dict.propertyCard.viewDetails} ${property.name}`}
         >
-          View Details
+          {dict.propertyCard.viewDetails}
         </Button>
       </div>
     </article>

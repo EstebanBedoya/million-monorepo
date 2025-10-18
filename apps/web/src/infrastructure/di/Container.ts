@@ -1,8 +1,8 @@
-import { PropertyRepository } from '../../domain/repositories/PropertyRepository';
-import { PropertyRepositoryImpl } from '../repositories/PropertyRepositoryImpl';
-import { PropertyServiceImpl } from '../../application/services/PropertyServiceImpl';
-import { HttpClient, HttpClientConfig } from '../http/HttpClient';
-import { PropertyApiClient } from '../api/PropertyApiClient';
+import { PropertyRepository } from '@/domain/repositories/PropertyRepository';
+import { PropertyRepositoryImpl } from '@/infrastructure/repositories/PropertyRepositoryImpl';
+import { PropertyServiceImpl } from '@/application/services/PropertyServiceImpl';
+import { HttpClient, HttpClientConfig } from '@/infrastructure/http/HttpClient';
+import { PropertyApiClient } from '@/infrastructure/api/PropertyApiClient';
 
 /**
  * Dependency Injection Container singleton for managing application-wide services.

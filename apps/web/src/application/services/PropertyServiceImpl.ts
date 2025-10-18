@@ -1,7 +1,7 @@
-import { PropertyService, CreatePropertyData } from '../interfaces/PropertyService';
-import { Property, PropertyStatus } from '../../domain/entities/Property';
-import { PaginatedResult } from '../../domain/repositories/PropertyRepository';
-import { PropertyRepository } from '../../domain/repositories/PropertyRepository';
+import { PropertyService, CreatePropertyData } from '@/application/interfaces/PropertyService';
+import { Property, PropertyStatus } from '@/domain/entities/Property';
+import { PaginatedResult } from '@/domain/repositories/PropertyRepository';
+import { PropertyRepository } from '@/domain/repositories/PropertyRepository';
 
 /**
  * PropertyServiceImpl provides the application-level implementation for all property-related

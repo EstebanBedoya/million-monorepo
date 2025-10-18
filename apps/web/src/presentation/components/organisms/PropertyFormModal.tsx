@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { SerializableProperty } from '../../../store/slices/propertySlice';
+import { useDictionary } from '../../../i18n/client';
 
 interface PropertyFormModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function PropertyFormModal({
   property,
   mode,
 }: PropertyFormModalProps) {
+  const dict = useDictionary();
   const [formData, setFormData] = useState<PropertyFormData>({
     name: '',
     address: '',
@@ -98,16 +100,16 @@ export function PropertyFormModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Property name is required';
+      newErrors.name = dict.propertyForm.required;
     }
     if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = dict.propertyForm.required;
     }
     if (!formData.city.trim()) {
-      newErrors.city = 'City is required';
+      newErrors.city = dict.propertyForm.required;
     }
     if (formData.price <= 0) {
-      newErrors.price = 'Price must be greater than 0';
+      newErrors.price = dict.propertyForm.invalidPrice;
     }
 
     setErrors(newErrors);
@@ -158,7 +160,7 @@ export function PropertyFormModal({
           <div className="bg-card px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">
-                {mode === 'create' ? 'Create New Property' : 'Edit Property'}
+                {mode === 'create' ? dict.propertyForm.createTitle : dict.propertyForm.editTitle}
               </h2>
               <button
                 onClick={onClose}
@@ -176,56 +178,56 @@ export function PropertyFormModal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Property Name *
+                    {dict.propertyForm.name} *
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleChange('name', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent ${errors.name ? 'border-red-500' : 'border-border'}`}
-                    placeholder="Modern Luxury Apartment"
+                    placeholder={dict.propertyForm.namePlaceholder}
                   />
                   {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Address *
+                    {dict.propertyForm.address} *
                   </label>
                   <input
                     type="text"
                     value={formData.address}
                     onChange={(e) => handleChange('address', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent ${errors.address ? 'border-red-500' : 'border-border'}`}
-                    placeholder="123 Main Street"
+                    placeholder={dict.propertyForm.addressPlaceholder}
                   />
                   {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    City *
+                    {dict.propertyForm.city} *
                   </label>
                   <input
                     type="text"
                     value={formData.city}
                     onChange={(e) => handleChange('city', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent ${errors.city ? 'border-red-500' : 'border-border'}`}
-                    placeholder="New York"
+                    placeholder={dict.propertyForm.cityPlaceholder}
                   />
                   {errors.city && <p className="mt-1 text-sm text-red-500">{errors.city}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Price (USD) *
+                    {dict.propertyForm.price} (USD) *
                   </label>
                   <input
                     type="number"
                     value={formData.price || ''}
                     onChange={(e) => handleChange('price', Number(e.target.value))}
                     className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent ${errors.price ? 'border-red-500' : 'border-border'}`}
-                    placeholder="850000"
+                    placeholder={dict.propertyForm.pricePlaceholder}
                     min="0"
                   />
                   {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
@@ -233,25 +235,25 @@ export function PropertyFormModal({
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Property Type
+                    {dict.propertyForm.propertyType}
                   </label>
                   <select
                     value={formData.propertyType}
                     onChange={(e) => handleChange('propertyType', e.target.value)}
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                   >
-                    <option value="House">House</option>
-                    <option value="Apartment">Apartment</option>
-                    <option value="Villa">Villa</option>
-                    <option value="Condo">Condo</option>
-                    <option value="Townhouse">Townhouse</option>
-                    <option value="Studio">Studio</option>
+                    <option value="House">{dict.filters.propertyTypeHouse}</option>
+                    <option value="Apartment">{dict.filters.propertyTypeApartment}</option>
+                    <option value="Villa">{dict.filters.propertyTypeVilla}</option>
+                    <option value="Condo">{dict.filters.propertyTypeCondo}</option>
+                    <option value="Townhouse">{dict.filters.propertyTypeTownhouse}</option>
+                    <option value="Studio">{dict.filters.propertyTypeStudio}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Bedrooms
+                    {dict.propertyForm.bedrooms}
                   </label>
                   <input
                     type="number"
@@ -265,7 +267,7 @@ export function PropertyFormModal({
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Bathrooms
+                    {dict.propertyForm.bathrooms}
                   </label>
                   <input
                     type="number"
@@ -279,7 +281,7 @@ export function PropertyFormModal({
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Area
+                    {dict.propertyForm.area}
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -295,15 +297,15 @@ export function PropertyFormModal({
                       onChange={(e) => handleChange('areaUnit', e.target.value)}
                       className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                     >
-                      <option value="m²">m²</option>
-                      <option value="sqft">sqft</option>
+                      <option value="m²">{dict.propertyForm.areaUnitM2}</option>
+                      <option value="sqft">{dict.propertyForm.areaUnitSqft}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-foreground mb-1">
-                    Image URL
+                    {dict.propertyForm.image}
                   </label>
                   <input
                     type="text"
@@ -329,7 +331,7 @@ export function PropertyFormModal({
                 disabled={isLoading}
                 className="px-4 py-2 text-sm font-medium text-foreground bg-background border border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50"
               >
-                Cancel
+                {dict.propertyForm.cancel}
               </button>
               <button
                 type="submit"
@@ -345,7 +347,7 @@ export function PropertyFormModal({
                     Saving...
                   </>
                 ) : (
-                  <>{mode === 'create' ? 'Create Property' : 'Save Changes'}</>
+                  <>{dict.propertyForm.submit}</>
                 )}
               </button>
             </div>

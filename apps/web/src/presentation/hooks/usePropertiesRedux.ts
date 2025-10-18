@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   fetchProperties,
   fetchAvailableProperties,
@@ -14,7 +14,7 @@ import {
   clearProperties,
   invalidateCache,
   updateCache,
-} from '../../store/slices/propertySlice';
+} from '@/store/slices/propertySlice';
 import {
   selectAllProperties,
   selectFilteredProperties,
@@ -29,9 +29,9 @@ import {
   selectPropertiesCount,
   selectFilteredPropertiesCount,
   selectPropertyStats,
-} from '../../store/selectors/propertySelectors';
-import { CreatePropertyData } from '../../application/interfaces/PropertyService';
-import { Property } from '../../domain/entities/Property';
+} from '@/store/selectors/propertySelectors';
+import { CreatePropertyData } from '@/application/interfaces/PropertyService';
+import { Property } from '@/domain/entities/Property';
 
 /**
  * Custom hook for managing properties with Redux

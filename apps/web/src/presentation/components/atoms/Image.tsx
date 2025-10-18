@@ -3,7 +3,7 @@
 import NextImage, { ImageProps as NextImageProps } from 'next/image';
 import { Home } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '../../../utils/cn';
+import { cn } from '@/utils/cn';
 
 export interface ImageProps extends NextImageProps {
   fallbackSrc?: string;

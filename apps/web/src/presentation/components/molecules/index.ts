@@ -17,3 +17,4 @@ export { ErrorState } from './ErrorState';
 export { LoadingState } from './LoadingState';
 export { Breadcrumbs } from './Breadcrumbs';
 export { ImageCarousel } from './ImageCarousel';
+export { LanguageSwitcher } from './LanguageSwitcher';

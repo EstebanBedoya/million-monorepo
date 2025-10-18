@@ -3,6 +3,7 @@
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { Search } from 'lucide-react';
+import { useDictionary } from '../../../i18n/client';
 
 export interface EmptyStateProps {
   title?: string;
@@ -12,11 +13,15 @@ export interface EmptyStateProps {
 }
 
 export const EmptyState = ({
-  title = 'No Properties Found',
-  message = "We couldn't find any properties matching your criteria. Try adjusting your filters or search terms.",
+  title,
+  message,
   onReset,
   className
 }: EmptyStateProps) => {
+  const dict = useDictionary();
+  
+  const displayTitle = title || dict.properties.noProperties;
+  const displayMessage = message || dict.common.noResults;
   return (
     <div
       className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}
@@ -28,20 +33,20 @@ export const EmptyState = ({
       </div>
 
       <h3 className="mb-2 text-lg font-semibold text-foreground">
-        {title}
+        {displayTitle}
       </h3>
 
       <p className="mb-6 max-w-md text-sm text-secondary">
-        {message}
+        {displayMessage}
       </p>
 
       {onReset && (
         <Button
           onClick={onReset}
           variant="outline"
-          aria-label="Clear all filters"
+          aria-label={dict.filters.clearFilters}
         >
-          Clear all filters
+          {dict.filters.clearFilters}
         </Button>
       )}
     </div>

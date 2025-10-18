@@ -1,63 +1,34 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { setTheme } from '@/store/slices/uiSlice';
+import { selectTheme, selectNextTheme } from '@/store/selectors/uiSelectors';
 
-// Theme configuration - easy to add new themes
+// Theme configuration
 const THEMES = {
   light: {
-    name: 'light',
-    displayName: '☀️ Light',
-    classes: ['theme-light'],
-    isDefault: true
+    classes: ['theme-light']
   },
   dark: {
-    name: 'dark',
-    displayName: '🌙 Dark',
-    classes: ['dark', 'theme-dark'],
-    isDefault: false
-  },
-  mcdonalds: {
-    name: 'mcdonalds',
-    displayName: '🍟 McDonald\'s',
-    classes: ['mcdonalds', 'theme-mcdonalds'],
-    isDefault: false
-  },
-  cyberpunk: {
-    name: 'cyberpunk',
-    displayName: '🤖 Cyberpunk',
-    classes: ['cyberpunk', 'theme-cyberpunk'],
-    isDefault: false
+    classes: ['dark', 'theme-dark']
   }
 } as const;
 
-type Theme = keyof typeof THEMES;
-
-// Theme order for cycling
-const THEME_ORDER: Theme[] = ['light', 'dark', 'mcdonalds', 'cyberpunk'];
-
 export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>('light');
+  const dispatch = useAppDispatch();
+  const theme = useAppSelector(selectTheme);
+  const nextTheme = useAppSelector(selectNextTheme);
+  const [mounted, setMounted] = useState(false);
 
-  // Get initial theme from localStorage or system preference
-  const getInitialTheme = (): Theme => {
-    if (typeof window === 'undefined') return 'light';
-    
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    if (savedTheme && THEMES[savedTheme]) {
-      return savedTheme;
-    }
-    
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  };
-
+  // Handle client-side mounting
   useEffect(() => {
-    setTheme(getInitialTheme());
+    setMounted(true);
   }, []);
 
   // Apply theme to document
-  const applyTheme = (newTheme: Theme) => {
-    if (typeof window === 'undefined') return;
+  useEffect(() => {
+    if (typeof window === 'undefined' || !mounted) return;
     
     const root = document.documentElement;
     
@@ -69,61 +40,20 @@ export const useTheme = () => {
     });
     
     // Apply new theme classes
-    const themeConfig = THEMES[newTheme];
+    const themeConfig = THEMES[theme];
     themeConfig.classes.forEach(className => {
       root.classList.add(className);
     });
-    
-    // Save to localStorage
-    localStorage.setItem('theme', newTheme);
-  };
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
-  // Get next theme in cycle
-  const getNextTheme = (currentTheme: Theme): Theme => {
-    const currentIndex = THEME_ORDER.indexOf(currentTheme);
-    const nextIndex = (currentIndex + 1) % THEME_ORDER.length;
-    return THEME_ORDER[nextIndex];
-  };
+  }, [theme, mounted]);
 
   // Toggle to next theme
   const toggleTheme = () => {
-    const nextTheme = getNextTheme(theme);
-    setTheme(nextTheme);
+    dispatch(setTheme(nextTheme));
   };
-
-  // Set specific theme
-  const setSpecificTheme = (newTheme: Theme) => {
-    if (!THEMES[newTheme]) return;
-    setTheme(newTheme);
-  };
-
-  // Get current theme info
-  const currentThemeInfo = THEMES[theme];
-
-  // Create theme checker functions
-  const isTheme = (themeName: Theme) => theme === themeName;
 
   return {
-    // Current theme
     theme,
-    themeInfo: currentThemeInfo,
-    
-    // Theme actions
     toggleTheme,
-    setTheme: setSpecificTheme,
-    
-    // Theme checkers
-    isLight: isTheme('light'),
-    isDark: isTheme('dark'),
-    isMcDonalds: isTheme('mcdonalds'),
-    
-    // Utility functions
-    getNextTheme,
-    getAllThemes: () => Object.values(THEMES),
-    getThemeInfo: (themeName: Theme) => THEMES[themeName]
+    mounted
   };
 };

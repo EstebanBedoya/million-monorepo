@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '../atoms/Button';
-import { cn } from '../../../utils/cn';
+import { Button } from '@/presentation/components/atoms/Button';
+import { cn } from '@/utils/cn';
 
 export interface PriceSuggestionsProps {
   onSelect: (min: number, max: number) => void;

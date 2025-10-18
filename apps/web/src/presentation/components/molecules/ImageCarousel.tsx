@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useRef, TouchEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Image } from '../atoms/Image';
-import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
-import { cn } from '../../../utils/cn';
+import { Image } from '@/presentation/components/atoms/Image';
+import { Button } from '@/presentation/components/atoms/Button';
+import { Icon } from '@/presentation/components/atoms/Icon';
+import { cn } from '@/utils/cn';
 
 export interface ImageCarouselProps {
   images: Array<{

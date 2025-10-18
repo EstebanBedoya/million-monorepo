@@ -2,20 +2,21 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { PropertyDetailSkeleton } from '../components/molecules/PropertyDetailSkeleton';
-import { NotFound } from '../components/organisms/NotFound';
-import { Button } from '../components/atoms/Button';
-import { Icon } from '../components/atoms/Icon';
+import { PropertyDetailSkeleton } from '@/presentation/components/molecules/PropertyDetailSkeleton';
+import { NotFound } from '@/presentation/components/organisms/NotFound';
+import { Button } from '@/presentation/components/atoms/Button';
+import { Icon } from '@/presentation/components/atoms/Icon';
 import { ArrowLeft, Edit2, Trash2, Calendar, DollarSign, MapPin, Home, User, History } from 'lucide-react';
-import { Badge } from '../components/atoms/Badge';
-import { Price } from '../components/atoms/Price';
-import { Image } from '../components/atoms/Image';
-import { PropertyFormModal, PropertyFormData } from '../components/organisms/PropertyFormModal';
-import { ConfirmDialog } from '../components/atoms/ConfirmDialog';
-import { ImageCarousel } from '../components/molecules/ImageCarousel';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { updateProperty, deleteProperty, fetchPropertyById, SerializableProperty } from '../../store/slices/propertySlice';
-import { PropertyType, AreaUnit } from '../../domain/entities/Property';
+import { Badge } from '@/presentation/components/atoms/Badge';
+import { Price } from '@/presentation/components/atoms/Price';
+import { Image } from '@/presentation/components/atoms/Image';
+import { PropertyFormModal, PropertyFormData } from '@/presentation/components/organisms/PropertyFormModal';
+import { ConfirmDialog } from '@/presentation/components/atoms/ConfirmDialog';
+import { ImageCarousel } from '@/presentation/components/molecules/ImageCarousel';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { updateProperty, deleteProperty, fetchPropertyById, SerializableProperty } from '@/store/slices/propertySlice';
+import { PropertyType, AreaUnit } from '@/domain/entities/Property';
+import { useDictionary, useLocale } from '@/i18n/client';
 
 export interface PropertyDetailPageProps {
   id: string;
@@ -24,6 +25,8 @@ export interface PropertyDetailPageProps {
 export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const dict = useDictionary();
+  const lang = useLocale();
   
   // Use Redux selectors instead of local state
   const { property, isLoading, error } = useAppSelector(state => ({
@@ -43,7 +46,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
   }, [dispatch, id]);
 
   const handleBack = () => {
-    router.push('/');
+    router.push(`/${lang}/properties`);
   };
 
   const handleEdit = useCallback(() => {
@@ -114,7 +117,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
     setIsDeleting(true);
     try {
       await dispatch(deleteProperty(property.id)).unwrap();
-      router.push('/');
+      router.push(`/${lang}/properties`);
     } catch (error) {
       console.error('Failed to delete property:', error);
       setIsDeleting(false);
@@ -145,11 +148,11 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
               aria-label="Go back to properties list"
             >
               <Icon icon={ArrowLeft} size="sm" className="mr-2" />
-              Back to Properties
+              {dict.propertyDetail.backToProperties}
             </Button>
             <div className="hidden sm:block h-6 w-px bg-border" />
             <h1 className="hidden sm:block text-lg font-semibold text-foreground">
-              Property Details
+              {dict.propertyDetail.propertyDetails}
             </h1>
           </div>
 
@@ -160,7 +163,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                aria-label="Edit property"
              >
                <Icon icon={Edit2} size="sm" className="mr-2" />
-               Edit
+               {dict.propertyDetail.edit}
              </Button>
 
              <Button
@@ -170,7 +173,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                aria-label="Delete property"
              >
                <Icon icon={Trash2} size="sm" className="mr-2" />
-               Delete
+               {dict.propertyDetail.delete}
              </Button>
            </div>
         </div>
@@ -203,7 +206,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                      <Icon icon={DollarSign} size="sm" className="text-accent" />
                    </div>
                    <div>
-                     <p className="text-sm text-secondary mb-1">Price</p>
+                     <p className="text-sm text-secondary mb-1">{dict.propertyDetail.price}</p>
                      <Price amount={property.price} size="lg" />
                    </div>
                  </div>
@@ -213,7 +216,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                      <Icon icon={MapPin} size="sm" className="text-accent" />
                    </div>
                    <div>
-                     <p className="text-sm text-secondary mb-1">Location</p>
+                     <p className="text-sm text-secondary mb-1">{dict.propertyDetail.location}</p>
                      <p className="font-medium text-foreground">{property.location}</p>
                    </div>
                  </div>
@@ -223,8 +226,8 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                      <Icon icon={Home} size="sm" className="text-accent" />
                    </div>
                    <div>
-                     <p className="text-sm text-secondary mb-1">Property Type</p>
-                     <p className="font-medium text-foreground">{property.propertyType || 'N/A'}</p>
+                     <p className="text-sm text-secondary mb-1">{dict.propertyDetail.propertyType}</p>
+                     <p className="font-medium text-foreground">{property.propertyType || dict.propertyDetail.na}</p>
                    </div>
                  </div>
  
@@ -233,7 +236,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                      <Icon icon={Calendar} size="sm" className="text-accent" />
                    </div>
                    <div>
-                     <p className="text-sm text-secondary mb-1">Property ID</p>
+                     <p className="text-sm text-secondary mb-1">{dict.propertyDetail.propertyId}</p>
                      <p className="font-medium text-foreground font-mono text-sm">{property.id}</p>
                    </div>
                  </div>
@@ -243,22 +246,22 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
 
             <div className="card-elevated p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">
-                Additional Information
+                {dict.propertyDetail.additionalInfo}
               </h3>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-background rounded-lg border border-border">
-                  <dt className="text-sm text-secondary mb-1">Full Address</dt>
+                  <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.fullAddress}</dt>
                   <dd className="font-medium text-foreground">{property.location}</dd>
                 </div>
 
                 <div className="p-4 bg-background rounded-lg border border-border">
-                  <dt className="text-sm text-secondary mb-1">Property Code</dt>
+                  <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.propertyCode}</dt>
                   <dd className="font-medium text-foreground">{property.id}</dd>
                 </div>
 
                 <div className="p-4 bg-background rounded-lg border border-border">
-                  <dt className="text-sm text-secondary mb-1">Year Built</dt>
-                  <dd className="font-medium text-foreground">{property.year || 'N/A'}</dd>
+                  <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.yearBuilt}</dt>
+                  <dd className="font-medium text-foreground">{property.year || dict.propertyDetail.na}</dd>
                 </div>
               </dl>
             </div>
@@ -271,7 +274,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                     <Icon icon={User} size="sm" className="text-accent" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">
-                    Property Owner
+                    {dict.propertyDetail.ownerInfo}
                   </h3>
                 </div>
                 
@@ -293,19 +296,19 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-foreground">{property.owner.name}</p>
-                      <p className="text-sm text-secondary">Owner ID: {property.owner.idOwner}</p>
+                      <p className="text-sm text-secondary">{dict.propertyDetail.ownerId}: {property.owner.idOwner}</p>
                     </div>
                   </div>
 
                   <div className="p-4 bg-background rounded-lg border border-border">
-                    <dt className="text-sm text-secondary mb-1">Owner Address</dt>
+                    <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.ownerAddress}</dt>
                     <dd className="font-medium text-foreground">{property.owner.address}</dd>
                   </div>
 
                   <div className="p-4 bg-background rounded-lg border border-border">
-                    <dt className="text-sm text-secondary mb-1">Birthday</dt>
+                    <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.birthday}</dt>
                     <dd className="font-medium text-foreground">
-                      {property.owner.birthday ? new Date(property.owner.birthday).toLocaleDateString() : 'N/A'}
+                      {property.owner.birthday ? new Date(property.owner.birthday).toLocaleDateString() : dict.propertyDetail.na}
                     </dd>
                   </div>
                 </div>
@@ -320,7 +323,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                     <Icon icon={History} size="sm" className="text-accent" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">
-                    Transaction History
+                    {dict.propertyDetail.transactionHistory}
                   </h3>
                 </div>
                 
@@ -329,35 +332,35 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                     <div key={trace.idPropertyTrace || index} className="p-4 bg-background rounded-lg border border-border">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                          <dt className="text-sm text-secondary mb-1">Transaction ID</dt>
+                          <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.transactionId}</dt>
                           <dd className="font-medium text-foreground text-sm">{trace.idPropertyTrace}</dd>
                         </div>
                         
                         <div>
-                          <dt className="text-sm text-secondary mb-1">Sale Date</dt>
+                          <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.saleDate}</dt>
                           <dd className="font-medium text-foreground">
-                            {trace.dateSale ? new Date(trace.dateSale).toLocaleDateString() : 'N/A'}
+                            {trace.dateSale ? new Date(trace.dateSale).toLocaleDateString() : dict.propertyDetail.na}
                           </dd>
                         </div>
                         
                         <div>
-                          <dt className="text-sm text-secondary mb-1">Value</dt>
+                          <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.value}</dt>
                           <dd className="font-medium text-foreground">
-                            ${trace.value?.toLocaleString() || 'N/A'}
+                            ${trace.value?.toLocaleString() || dict.propertyDetail.na}
                           </dd>
                         </div>
                         
                         <div>
-                          <dt className="text-sm text-secondary mb-1">Tax</dt>
+                          <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.tax}</dt>
                           <dd className="font-medium text-foreground">
-                            ${trace.tax?.toLocaleString() || 'N/A'}
+                            ${trace.tax?.toLocaleString() || dict.propertyDetail.na}
                           </dd>
                         </div>
                       </div>
                       
                       {trace.name && (
                         <div className="mt-3 pt-3 border-t border-border">
-                          <dt className="text-sm text-secondary mb-1">Associated Name</dt>
+                          <dt className="text-sm text-secondary mb-1">{dict.propertyDetail.associatedName}</dt>
                           <dd className="font-medium text-foreground">{trace.name}</dd>
                         </div>
                       )}
@@ -372,7 +375,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
             <div className="card-elevated p-6 sticky top-8 space-y-6">
               <div>
                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                   Quick Actions
+                   {dict.propertyDetail.quickActions}
                  </h3>
                  <div className="space-y-3">
                    <Button 
@@ -381,7 +384,7 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                      aria-label="Edit property"
                    >
                      <Icon icon={Edit2} size="sm" className="mr-2" />
-                     Edit Property
+                     {dict.propertyDetail.editProperty}
                    </Button>
  
                    <Button 
@@ -391,57 +394,57 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
                      aria-label="Delete property"
                    >
                      <Icon icon={Trash2} size="sm" className="mr-2" />
-                     Delete Property
+                     {dict.propertyDetail.deleteProperty}
                    </Button>
                  </div>
               </div>
 
               <div className="pt-6 border-t border-border">
                 <h3 className="text-lg font-semibold text-foreground mb-4">
-                  Summary
+                  {dict.propertyDetail.summary}
                 </h3>
                  <div className="space-y-3">
                    <div className="flex items-center justify-between py-2">
-                     <span className="text-sm text-secondary">Status</span>
+                     <span className="text-sm text-secondary">{dict.propertyDetail.status}</span>
                      <Badge variant="secondary">
-                       Active
+                       {dict.propertyDetail.active}
                      </Badge>
                    </div>
                   
                   <div className="flex items-center justify-between py-2 border-t border-border">
-                    <span className="text-sm text-secondary">Price</span>
+                    <span className="text-sm text-secondary">{dict.propertyDetail.price}</span>
                     <span className="font-semibold text-foreground">
                       ${property.price.toLocaleString()}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between py-2 border-t border-border">
-                    <span className="text-sm text-secondary">Location</span>
+                    <span className="text-sm text-secondary">{dict.propertyDetail.location}</span>
                     <span className="font-medium text-foreground text-right">{property.location}</span>
                   </div>
 
                   <div className="flex items-center justify-between py-2 border-t border-border">
-                    <span className="text-sm text-secondary">Type</span>
-                    <span className="font-medium text-foreground">{property.propertyType || 'N/A'}</span>
+                    <span className="text-sm text-secondary">{dict.propertyDetail.propertyType}</span>
+                    <span className="font-medium text-foreground">{property.propertyType || dict.propertyDetail.na}</span>
                   </div>
 
                   {property.year && (
                     <div className="flex items-center justify-between py-2 border-t border-border">
-                      <span className="text-sm text-secondary">Year</span>
+                      <span className="text-sm text-secondary">{dict.propertyDetail.yearBuilt}</span>
                       <span className="font-medium text-foreground">{property.year}</span>
                     </div>
                   )}
 
                   {property.owner && (
                     <div className="flex items-center justify-between py-2 border-t border-border">
-                      <span className="text-sm text-secondary">Owner</span>
+                      <span className="text-sm text-secondary">{dict.propertyDetail.owner}</span>
                       <span className="font-medium text-foreground text-right">{property.owner.name}</span>
                     </div>
                   )}
 
                   {property.traces && property.traces.length > 0 && (
                     <div className="flex items-center justify-between py-2 border-t border-border">
-                      <span className="text-sm text-secondary">Transactions</span>
+                      <span className="text-sm text-secondary">{dict.propertyDetail.transactions}</span>
                       <span className="font-medium text-foreground">{property.traces.length}</span>
                     </div>
                   )}
@@ -466,10 +469,10 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
 
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
-        title="Delete Property"
-        message={`Are you sure you want to delete "${property?.name}"? This action cannot be undone and you will be redirected to the properties list.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={dict.properties.deleteProperty}
+        message={`${dict.properties.confirmDelete} "${property?.name}"? ${dict.properties.deleteWarning}`}
+        confirmLabel={dict.common.delete}
+        cancelLabel={dict.common.cancel}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         variant="danger"

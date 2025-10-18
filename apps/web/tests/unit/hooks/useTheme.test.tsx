@@ -1,5 +1,9 @@
 import { renderHook, act } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { useTheme } from '../../../src/presentation/hooks/useTheme';
+import uiReducer from '../../../src/store/slices/uiSlice';
+import propertyReducer from '../../../src/store/slices/propertySlice';
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -11,6 +15,17 @@ const mockLocalStorage = {
 
 // Mock window.matchMedia
 const mockMatchMedia = jest.fn();
+
+// Create a test store
+const createTestStore = (initialState = {}) => {
+  return configureStore({
+    reducer: {
+      ui: uiReducer,
+      properties: propertyReducer,
+    },
+    preloadedState: initialState,
+  });
+};
 
 beforeEach(() => {
   // Reset all mocks
@@ -42,42 +57,22 @@ beforeEach(() => {
 
 describe('useTheme', () => {
   it('should initialize with light theme by default', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
+    const store = createTestStore();
+    
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+    });
 
     expect(result.current.theme).toBe('light');
-    expect(result.current.isLight).toBe(true);
-    expect(result.current.isDark).toBe(false);
-    expect(result.current.isMcDonalds).toBe(false);
+    expect(result.current.mounted).toBe(false); // Initially not mounted
   });
 
-  it('should initialize with saved theme from localStorage', () => {
-    mockLocalStorage.getItem.mockReturnValue('dark');
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    expect(result.current.theme).toBe('dark');
-    expect(result.current.isDark).toBe(true);
-  });
-
-  it('should initialize with dark theme based on system preference', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: true });
-
-    const { result } = renderHook(() => useTheme());
-
-    expect(result.current.theme).toBe('dark');
-    expect(result.current.isDark).toBe(true);
-  });
-
-  it('should toggle to next theme in cycle', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
+  it('should toggle to next theme', () => {
+    const store = createTestStore();
+    
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+    });
 
     // Start with light theme
     expect(result.current.theme).toBe('light');
@@ -87,72 +82,10 @@ describe('useTheme', () => {
       result.current.toggleTheme();
     });
     expect(result.current.theme).toBe('dark');
-
-    // Toggle to mcdonalds
-    act(() => {
-      result.current.toggleTheme();
-    });
-    expect(result.current.theme).toBe('mcdonalds');
-
-    // Toggle to cyberpunk
-    act(() => {
-      result.current.toggleTheme();
-    });
-    expect(result.current.theme).toBe('cyberpunk');
-
-    // Toggle back to light (cycle complete)
-    act(() => {
-      result.current.toggleTheme();
-    });
-    expect(result.current.theme).toBe('light');
   });
 
-  it('should set specific theme', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    act(() => {
-      result.current.setTheme('cyberpunk');
-    });
-
-    expect(result.current.theme).toBe('cyberpunk');
-    expect(result.current.isMcDonalds).toBe(false);
-  });
-
-  it('should not set invalid theme', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    const initialTheme = result.current.theme;
-
-    act(() => {
-      result.current.setTheme('invalid' as any);
-    });
-
-    expect(result.current.theme).toBe(initialTheme);
-  });
-
-  it('should save theme to localStorage when changed', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    act(() => {
-      result.current.setTheme('dark');
-    });
-
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
-  });
-
-  it('should apply theme classes to document', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
+  it('should apply theme classes to document when mounted', () => {
+    const store = createTestStore();
     const mockClassList = {
       add: jest.fn(),
       remove: jest.fn(),
@@ -163,68 +96,28 @@ describe('useTheme', () => {
       writable: true,
     });
 
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+    });
 
+    // Wait for component to mount
     act(() => {
-      result.current.setTheme('dark');
+      // Simulate mounting
     });
 
-    // Should remove all theme classes first
-    expect(mockClassList.remove).toHaveBeenCalled();
-    // Should add dark theme classes
-    expect(mockClassList.add).toHaveBeenCalledWith('dark');
-    expect(mockClassList.add).toHaveBeenCalledWith('theme-dark');
+    // Should apply light theme classes initially
+    expect(mockClassList.add).toHaveBeenCalledWith('theme-light');
   });
 
-  it('should return correct theme info', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    expect(result.current.themeInfo).toEqual({
-      name: 'light',
-      displayName: '☀️ Light',
-      classes: ['theme-light'],
-      isDefault: true,
+  it('should handle theme changes correctly', () => {
+    const store = createTestStore({
+      ui: { theme: 'dark', sidebarOpen: false, modalOpen: false, notifications: [] }
     });
-  });
-
-  it('should return all available themes', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    const allThemes = result.current.getAllThemes();
-    expect(allThemes).toHaveLength(4);
-    expect(allThemes.map(t => t.name)).toEqual(['light', 'dark', 'mcdonalds', 'cyberpunk']);
-  });
-
-  it('should return next theme correctly', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    expect(result.current.getNextTheme('light')).toBe('dark');
-    expect(result.current.getNextTheme('dark')).toBe('mcdonalds');
-    expect(result.current.getNextTheme('mcdonalds')).toBe('cyberpunk');
-    expect(result.current.getNextTheme('cyberpunk')).toBe('light');
-  });
-
-  it('should return theme info for specific theme', () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockMatchMedia.mockReturnValue({ matches: false });
-
-    const { result } = renderHook(() => useTheme());
-
-    const mcdonaldsInfo = result.current.getThemeInfo('mcdonalds');
-    expect(mcdonaldsInfo).toEqual({
-      name: 'mcdonalds',
-      displayName: '🍟 McDonald\'s',
-      classes: ['mcdonalds', 'theme-mcdonalds'],
-      isDefault: false,
+    
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
     });
+
+    expect(result.current.theme).toBe('dark');
   });
 });

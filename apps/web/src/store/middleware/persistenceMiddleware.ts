@@ -23,6 +23,11 @@ export const persistenceMiddleware: Middleware = (store) => (next) => (action: u
 
 // Load state from localStorage
 export const loadStateFromStorage = (): Partial<RootState> | undefined => {
+  // Only load from localStorage on client side
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
   try {
     const serializedState = localStorage.getItem('redux-state');
     if (serializedState === null) {

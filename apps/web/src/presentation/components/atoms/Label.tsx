@@ -1,7 +1,7 @@
 'use client';
 
 import { LabelHTMLAttributes, forwardRef } from 'react';
-import { cn } from '../../../utils/cn';
+import { cn } from '@/utils/cn';
 
 export interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
   required?: boolean;

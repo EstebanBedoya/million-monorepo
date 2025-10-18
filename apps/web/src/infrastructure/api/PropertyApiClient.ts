@@ -1,5 +1,5 @@
-import { PropertyDto } from '../../../../../shared/contracts/property.dto';
-import { HttpClient, RequestConfig } from '../http/HttpClient';
+import { PropertyDto } from '@/shared/contracts/property.dto';
+import { HttpClient, RequestConfig } from '@/infrastructure/http/HttpClient';
 
 export interface PropertyApiFilters {
   search?: string;

@@ -5,6 +5,7 @@ import { Label } from '../atoms/Label';
 import { Price } from '../atoms/Price';
 import { PriceSuggestions } from './PriceSuggestions';
 import { useState, useEffect } from 'react';
+import { useDictionary } from '../../../i18n/client';
 
 export interface PriceRangeProps {
   minPrice: number;
@@ -25,6 +26,7 @@ export const PriceRange = ({
   max = 1000000000,
   className
 }: PriceRangeProps) => {
+  const dict = useDictionary();
   const formatNumberWithCommas = (value: string) => {
     // Remove all non-numeric characters
     const numericValue = value.replace(/[^\d]/g, '');
@@ -91,7 +93,7 @@ export const PriceRange = ({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-3">
-        <Label>Price Range</Label>
+        <Label>{dict.filters.priceRange}</Label>
         <div className="text-sm text-accent font-medium">
           <Price amount={minPrice} size="sm" /> - <Price amount={maxPrice} size="sm" />
         </div>
@@ -103,7 +105,7 @@ export const PriceRange = ({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="min-price" className="text-xs text-secondary mb-1 block">
-              Min Price
+              {dict.filters.minPrice}
             </Label>
             <Input
               id="min-price"
@@ -117,7 +119,7 @@ export const PriceRange = ({
 
           <div>
             <Label htmlFor="max-price" className="text-xs text-secondary mb-1 block">
-              Max Price
+              {dict.filters.maxPrice}
             </Label>
             <Input
               id="max-price"

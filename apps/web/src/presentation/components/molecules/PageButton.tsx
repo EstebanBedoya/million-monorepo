@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { useDictionary } from '../../../i18n/client';
 
 export interface PageButtonProps {
   direction: 'prev' | 'next';
@@ -12,9 +13,10 @@ export interface PageButtonProps {
 }
 
 export const PageButton = ({ direction, disabled, onClick, className }: PageButtonProps) => {
+  const dict = useDictionary();
   const isPrev = direction === 'prev';
   const IconComponent = isPrev ? ChevronLeft : ChevronRight;
-  const label = isPrev ? 'Previous page' : 'Next page';
+  const label = isPrev ? dict.pagination.previous : dict.pagination.next;
 
   return (
     <Button

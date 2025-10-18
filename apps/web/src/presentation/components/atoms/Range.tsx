@@ -1,7 +1,7 @@
 'use client';
 
 import { InputHTMLAttributes, forwardRef } from 'react';
-import { cn } from '../../../utils/cn';
+import { cn } from '@/utils/cn';
 
 export interface RangeProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   error?: boolean;

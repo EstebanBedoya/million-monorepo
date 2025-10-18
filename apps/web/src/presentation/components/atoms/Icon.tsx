@@ -1,7 +1,7 @@
 'use client';
 
 import { LucideIcon } from 'lucide-react';
-import { cn } from '../../../utils/cn';
+import { cn } from '@/utils/cn';
 
 export interface IconProps {
   icon: LucideIcon;

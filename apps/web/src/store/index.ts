@@ -3,7 +3,8 @@ import propertyReducer from './slices/propertySlice';
 import uiReducer from './slices/uiSlice';
 import { propertyMiddleware } from './middleware/propertyMiddleware';
 import { loggerMiddleware } from './middleware/loggerMiddleware';
-import { persistenceMiddleware } from './middleware/persistenceMiddleware';
+import { persistenceMiddleware, loadStateFromStorage } from './middleware/persistenceMiddleware';
+import { migrateLegacyTheme } from '../utils/themeMigration';
 
 // Define the root reducer
 const rootReducer = combineReducers({
@@ -11,9 +12,21 @@ const rootReducer = combineReducers({
   ui: uiReducer,
 });
 
+// Load initial state from localStorage and migrate legacy theme
+const preloadedState = loadStateFromStorage();
+
+// Migrate legacy theme if it exists
+if (typeof window !== 'undefined') {
+  const legacyTheme = migrateLegacyTheme();
+  if (legacyTheme && preloadedState?.ui) {
+    preloadedState.ui.theme = legacyTheme as 'light' | 'dark';
+  }
+}
+
 // Configure Redux store
 export const store = configureStore({
   reducer: rootReducer,
+  preloadedState,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

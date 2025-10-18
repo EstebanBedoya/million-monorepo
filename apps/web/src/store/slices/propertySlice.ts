@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Property, PropertyType, PropertyStatus, AreaUnit } from '../../domain/entities/Property';
-import { PropertyService, CreatePropertyData } from '../../application/interfaces/PropertyService';
-import { Container } from '../../infrastructure/di/Container';
+import { Property, PropertyType, PropertyStatus, AreaUnit } from '@/domain/entities/Property';
+import { PropertyService, CreatePropertyData } from '@/application/interfaces/PropertyService';
+import { Container } from '@/infrastructure/di/Container';
 
 // Serializable property interface for Redux state
 export interface SerializableProperty {

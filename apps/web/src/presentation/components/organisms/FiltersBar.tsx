@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { SearchInput } from '../molecules/SearchInput';
-import { PropertyTypeSelect } from '../molecules/PropertyTypeSelect';
-import { PriceRange } from '../molecules/PriceRange';
-import { ClearFiltersButton } from '../molecules/ClearFiltersButton';
+import { SearchInput } from '@/presentation/components/molecules/SearchInput';
+import { PropertyTypeSelect } from '@/presentation/components/molecules/PropertyTypeSelect';
+import { PriceRange } from '@/presentation/components/molecules/PriceRange';
+import { ClearFiltersButton } from '@/presentation/components/molecules/ClearFiltersButton';
+import { useDictionary } from '@/i18n/client';
 
 export interface FilterValues {
   search: string;
@@ -36,6 +37,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export function FiltersBar({ onFilterChange, defaultFilters, skipInitialCall = true }: FiltersBarProps) {
+  const dict = useDictionary();
   const [search, setSearch] = useState(defaultFilters?.search || '');
   const [minPrice, setMinPrice] = useState(defaultFilters?.minPrice || 0);
   const [maxPrice, setMaxPrice] = useState(defaultFilters?.maxPrice || 1000000000);
@@ -80,15 +82,15 @@ export function FiltersBar({ onFilterChange, defaultFilters, skipInitialCall = t
       <div className="space-y-4">
         <SearchInput
           id="search"
-          label="Search by name or address"
+          label={dict.filters.searchLabel}
           value={search}
           onChange={setSearch}
-          placeholder="e.g., Modern Villa, Los Angeles..."
+          placeholder={dict.filters.searchPlaceholder}
         />
 
         <PropertyTypeSelect
           id="property-type"
-          label="Property Type"
+          label={dict.filters.propertyType}
           value={propertyType}
           onChange={setPropertyType}
         />

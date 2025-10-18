@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { RootState } from '../index';
+import { RootState } from '@/store/index';
 import { Property } from '@/domain/entities/Property';
-import { SerializableProperty } from '../slices/propertySlice';
+import { SerializableProperty } from '@/store/slices/propertySlice';
 
 // Helper function to convert serializable property to Property instance
 const serializableToProperty = (data: SerializableProperty): Property => 

@@ -1,7 +1,7 @@
 'use client';
 
 import { HTMLAttributes } from 'react';
-import { cn } from '../../../utils/cn';
+import { cn } from '@/utils/cn';
 
 export interface BadgeProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'secondary' | 'accent' | 'destructive';

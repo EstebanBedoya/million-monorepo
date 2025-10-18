@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Home, Search } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { useDictionary, useLocale } from '../../../i18n/client';
 
 export interface NotFoundProps {
   title?: string;
@@ -12,9 +13,14 @@ export interface NotFoundProps {
 }
 
 export const NotFound = ({ 
-  title = 'Property Not Found',
-  message = "We couldn't find the property you're looking for. It may have been removed or is no longer available.",
+  title,
+  message,
 }: NotFoundProps) => {
+  const dict = useDictionary();
+  const lang = useLocale();
+  
+  const displayTitle = title || dict.notFound.title;
+  const displayMessage = message || dict.notFound.message;
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
@@ -30,22 +36,22 @@ export const NotFound = ({
         </div>
         
         <h1 className="text-4xl font-bold text-foreground mb-4">
-          404
+          {dict.notFound.code}
         </h1>
         
         <h2 className="text-2xl font-semibold text-foreground mb-3">
-          {title}
+          {displayTitle}
         </h2>
         
         <p className="text-secondary mb-8">
-          {message}
+          {displayMessage}
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/properties">
+          <Link href={`/${lang}/properties`}>
             <Button className="w-full sm:w-auto">
               <Icon icon={Home} size="sm" className="mr-2" />
-              Back to Properties
+              {dict.notFound.backToProperties}
             </Button>
           </Link>
         </div>
