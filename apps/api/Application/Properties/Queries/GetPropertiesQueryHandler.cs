@@ -30,18 +30,33 @@ public class GetPropertiesQueryHandler : IRequestHandler<GetPropertiesQuery, Pro
 
         var propertyDtos = _mapper.Map<List<PropertyDto>>(properties);
         
-        // Get enabled images for all properties in parallel
-        var imageTasks = propertyDtos.Select(async propertyDto =>
+        // Get enabled images for each property
+        foreach (var propertyDto in propertyDtos)
         {
-            var enabledImages = await _propertyImageRepository.GetByPropertyIdAsync(
-                propertyDto.IdProperty, 
-                enabledOnly: true, 
-                cancellationToken);
-            
-            propertyDto.Image = enabledImages.FirstOrDefault()?.File;
-        });
-        
-        await Task.WhenAll(imageTasks);
+            try
+            {
+                var enabledImages = await _propertyImageRepository.GetByPropertyIdAsync(
+                    propertyDto.IdProperty, 
+                    enabledOnly: true, 
+                    cancellationToken);
+                
+                var imagesList = enabledImages.ToList();
+                
+                if (imagesList.Any())
+                {
+                    propertyDto.Image = imagesList.First().File;
+                }
+                else
+                {
+                    propertyDto.Image = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting images for property {propertyDto.IdProperty}: {ex.Message}");
+                propertyDto.Image = null;
+            }
+        }
         
         var totalPages = (int)Math.Ceiling(total / (double)request.Limit);
 

@@ -41,7 +41,7 @@ public class GetPropertyByIdQueryHandler : IRequestHandler<GetPropertyByIdQuery,
             propertyDetail.Owner = _mapper.Map<OwnerDto>(owner);
         }
 
-        var images = await _imageRepository.GetByPropertyIdAsync(request.IdProperty, enabledOnly: true, cancellationToken);
+        var images = await _imageRepository.GetByPropertyIdAsync(request.IdProperty, enabledOnly: null, cancellationToken);
         propertyDetail.Images = _mapper.Map<List<PropertyImageDto>>(images);
 
         var traces = await _traceRepository.GetByPropertyIdAsync(request.IdProperty, cancellationToken: cancellationToken);

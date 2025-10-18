@@ -5,7 +5,7 @@ namespace Domain.Entities;
 public class PropertyImage
 {
     [BsonId]
-    [BsonElement("_id")]
+    [BsonRepresentation(MongoDB.Bson.BsonType.String)]
     public string IdPropertyImage { get; set; } = string.Empty;
 
     [BsonElement("idProperty")]

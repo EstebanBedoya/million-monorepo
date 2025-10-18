@@ -16,7 +16,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Birthday, opt => opt.MapFrom(src => DateTime.Parse(src.Birthday)))
             .ForMember(dest => dest.Photo, opt => opt.MapFrom(src => src.Photo ?? "https://i.pravatar.cc/150?img=1"));
 
-        CreateMap<Property, PropertyDto>();
+        CreateMap<Property, PropertyDto>()
+            .ForMember(dest => dest.Image, opt => opt.Ignore()); // Ignore Image field as it's set manually
         CreateMap<Property, PropertyDetailDto>();
         
         CreateMap<CreatePropertyDto, Property>()

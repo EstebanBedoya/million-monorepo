@@ -4,7 +4,7 @@
 
 ### Cambios Necesarios en el Frontend
 
-El frontend actualmente usa endpoints mock en `/api/mock/*`. Para conectar con la nueva API .NET, necesitas:
+El frontend actualmente usa endpoints en `/api/*`. Para conectar con la nueva API .NET, necesitas:
 
 ### 1. Actualizar Variables de Entorno
 
@@ -140,13 +140,13 @@ private extractCity(address: string): string {
 
 ### 5. Actualizar Endpoints
 
-#### Antes (Mock):
+#### Antes:
 ```typescript
-GET /api/mock/properties
-GET /api/mock/properties/{id}
-POST /api/mock/properties
-PUT /api/mock/properties/{id}
-DELETE /api/mock/properties/{id}
+GET /api/properties
+GET /api/properties/{id}
+POST /api/properties
+PUT /api/properties/{id}
+DELETE /api/properties/{id}
 ```
 
 #### Después (API .NET):
@@ -303,7 +303,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api
 En el código:
 ```typescript
 const useMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
-const baseUrl = useMock ? '/api/mock' : process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 ```
 
 ## 🚀 Pasos para Migración
