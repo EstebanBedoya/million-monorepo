@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+// import { useState } from 'react'; // Removed unused import
 import { X, Filter } from 'lucide-react';
 import { Icon } from '../atoms/Icon';
 import { FiltersBar, FilterValues } from './FiltersBar';

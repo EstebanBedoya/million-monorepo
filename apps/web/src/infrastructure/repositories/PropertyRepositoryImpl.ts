@@ -1,6 +1,7 @@
 import { PropertyRepository, PaginationOptions, PaginatedResult } from '../../domain/repositories/PropertyRepository';
 import { Property, PropertyType, PropertyStatus, AreaUnit } from '../../domain/entities/Property';
 import { PropertyApiClient } from '../api/PropertyApiClient';
+import { PropertyDto } from '../../../../../shared/contracts/property.dto';
 
 // Infrastructure implementation - handles data persistence with API
 export class PropertyRepositoryImpl implements PropertyRepository {
@@ -112,60 +113,60 @@ export class PropertyRepositoryImpl implements PropertyRepository {
   }
 
   // Mapper methods
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private mapDtoToEntity(dto: any): Property {
+  private mapDtoToEntity(dto: Record<string, unknown> | PropertyDto): Property {
     // Check if it's the new backend format with idProperty
     const isNewBackendFormat = 'idProperty' in dto;
     
     if (isNewBackendFormat) {
       // Map from new backend format (.NET API)
-      const images = dto.images?.map((img: any) => ({
-        idPropertyImage: img.idPropertyImage,
-        idProperty: img.idProperty,
-        file: img.file,
-        enabled: img.enabled
-      })) || (dto.image ? [{
+      const dtoWithImages = dto as Record<string, unknown>;
+      const images = (dtoWithImages.images as Array<Record<string, unknown>>)?.map((img: Record<string, unknown>) => ({
+        idPropertyImage: img.idPropertyImage as string,
+        idProperty: img.idProperty as string,
+        file: img.file as string,
+        enabled: img.enabled as boolean
+      })) || (dtoWithImages.image ? [{
         idPropertyImage: 'img-0',
-        idProperty: dto.idProperty,
-        file: dto.image,
+        idProperty: dtoWithImages.idProperty as string,
+        file: dtoWithImages.image as string,
         enabled: true
       }] : []);
 
-      const owner = dto.owner ? {
-        idOwner: dto.owner.idOwner,
-        name: dto.owner.name,
-        address: dto.owner.address,
-        birthday: dto.owner.birthday,
-        photo: dto.owner.photo
+      const owner = dtoWithImages.owner ? {
+        idOwner: (dtoWithImages.owner as Record<string, unknown>).idOwner as string,
+        name: (dtoWithImages.owner as Record<string, unknown>).name as string,
+        address: (dtoWithImages.owner as Record<string, unknown>).address as string,
+        birthday: (dtoWithImages.owner as Record<string, unknown>).birthday as string,
+        photo: (dtoWithImages.owner as Record<string, unknown>).photo as string
       } : undefined;
 
-      const traces = dto.traces?.map((trace: any) => ({
-        idPropertyTrace: trace.idPropertyTrace,
-        dateSale: trace.dateSale,
-        idProperty: trace.idProperty,
-        name: trace.name,
-        tax: trace.tax,
-        value: trace.value
+      const traces = (dtoWithImages.traces as Array<Record<string, unknown>>)?.map((trace: Record<string, unknown>) => ({
+        idPropertyTrace: trace.idPropertyTrace as string,
+        dateSale: trace.dateSale as string,
+        idProperty: trace.idProperty as string,
+        name: trace.name as string,
+        tax: trace.tax as number,
+        value: trace.value as number
       })) || undefined;
 
       return new Property(
-        dto.idProperty || dto.id,
-        dto.name || 'Untitled Property',
-        dto.name || 'Property description',
-        dto.price || 0,
+        dtoWithImages.idProperty as string || (dto as Record<string, unknown>).id as string,
+        dtoWithImages.name as string || 'Untitled Property',
+        dtoWithImages.name as string || 'Property description',
+        dtoWithImages.price as number || 0,
         'USD',
-        dto.address || 'Unknown location',
+        dtoWithImages.address as string || 'Unknown location',
         this.mapPropertyType('House'),
         0,
         AreaUnit.M2,
         [],
         images,
         PropertyStatus.AVAILABLE,
-        dto.year ? new Date(dto.year, 0, 1) : new Date(),
+        dtoWithImages.year ? new Date(dtoWithImages.year as number, 0, 1) : new Date(),
         new Date(),
         0,
         0,
-        dto.year,
+        dtoWithImages.year as number,
         owner,
         traces
       );
@@ -176,43 +177,45 @@ export class PropertyRepositoryImpl implements PropertyRepository {
     
     if (isMockFormat) {
       // Map from MockPropertyDto format
+      const mockDto = dto as Record<string, unknown>;
       return new Property(
-        dto.id,
-        dto.name || 'Untitled Property',
-        `Beautiful property located at ${dto.address}, ${dto.city}`,
-        dto.price,
+        mockDto.id as string,
+        (mockDto.name as string) || 'Untitled Property',
+        `Beautiful property located at ${mockDto.address}, ${mockDto.city}`,
+        mockDto.price as number,
         'USD',
-        `${dto.address}, ${dto.city}`,
-        this.mapPropertyType(dto.propertyType),
-        dto.area || 0,
-        this.mapAreaUnit(dto.areaUnit),
+        `${mockDto.address}, ${mockDto.city}`,
+        this.mapPropertyType(mockDto.propertyType as string),
+        (mockDto.area as number) || 0,
+        this.mapAreaUnit(mockDto.areaUnit as string),
         [],
-        dto.image ? [dto.image] : [],
+        mockDto.image ? [mockDto.image as string] : [],
         PropertyStatus.AVAILABLE,
         new Date(),
         new Date(),
-        dto.bedrooms,
-        dto.bathrooms
+        mockDto.bedrooms as number,
+        mockDto.bathrooms as number
       );
     } else {
       // Map from PropertyDto format
+      const propertyDto = dto as unknown as PropertyDto;
       return new Property(
-        dto.id,
-        dto.name,
-        dto.description,
-        dto.price,
-        dto.currency,
-        dto.location,
-        dto.propertyType as Property['propertyType'],
-        dto.area,
-        dto.areaUnit as Property['areaUnit'],
-        dto.features,
-        dto.images,
-        dto.status as Property['status'],
-        new Date(dto.createdAt),
-        new Date(dto.updatedAt),
-        dto.bedrooms,
-        dto.bathrooms
+        propertyDto.idProperty,
+        propertyDto.name,
+        propertyDto.name, // Use name as description for PropertyDto
+        propertyDto.price,
+        'USD', // Default currency
+        propertyDto.address,
+        PropertyType.HOUSE, // Default property type
+        0, // Default area
+        AreaUnit.M2, // Default area unit
+        [], // Default features
+        [], // Default images
+        PropertyStatus.AVAILABLE, // Default status
+        new Date(), // Default createdAt
+        new Date(), // Default updatedAt
+        undefined, // Default bedrooms
+        undefined // Default bathrooms
       );
     }
   }
@@ -233,8 +236,7 @@ export class PropertyRepositoryImpl implements PropertyRepository {
     return areaUnit === 'm²' ? AreaUnit.M2 : AreaUnit.SQFT;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private mapEntityToDto(entity: Property): any {
+  private mapEntityToDto(entity: Property): Record<string, unknown> {
     return {
       name: entity.name,
       address: entity.location.split(',')[0] || entity.location,

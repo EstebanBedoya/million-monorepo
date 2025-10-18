@@ -7,7 +7,7 @@ export { LocationInfo } from './LocationInfo';
 export { ClearFiltersButton } from './ClearFiltersButton';
 export { PageButton } from './PageButton';
 export { PageNumberButton } from './PageNumberButton';
-export { Pagination } from './Pagination';
+export { Pagination as PaginationMolecule } from './Pagination';
 export { EmptyState } from './EmptyState';
 export { PropertyCardSkeleton, PropertyListSkeleton } from './PropertyCardSkeleton';
 export { PaginationSkeleton } from './PaginationSkeleton';

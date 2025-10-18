@@ -30,8 +30,8 @@ interface PropertiesPageProps {
 
 // Internal component that uses search params
 function PropertiesPageContent({
-  initialProperties = [],
-  initialPagination
+  initialProperties: _initialProperties = [],
+  initialPagination: _initialPagination
 }: PropertiesPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,19 +39,19 @@ function PropertiesPageContent({
   
   // Redux hooks
   const {
-    filteredProperties,
+    filteredProperties: _filteredProperties,
     isLoading: loading,
     error,
     pagination,
-    currentFilter,
-    searchFilters,
+    currentFilter: _currentFilter,
+    searchFilters: _searchFilters,
     loadProperties,
-    loadAvailableProperties,
-    loadExpensiveProperties,
-    changeFilter,
+    loadAvailableProperties: _loadAvailableProperties,
+    loadExpensiveProperties: _loadExpensiveProperties,
+    changeFilter: _changeFilter,
     updateSearchFilters,
     clearFilters,
-    clearError,
+    clearError: _clearError,
     isCacheValid,
     needsRefresh,
   } = usePropertiesRedux();
@@ -109,7 +109,7 @@ function PropertiesPageContent({
   }, []);
 
   // Load properties using Redux (load all properties once)
-  const loadPropertiesData = useCallback(async (filterValues: FilterValues, page: number) => {
+  const loadPropertiesData = useCallback(async (filterValues: FilterValues, _page: number) => {
     // Check if we need to refresh data
     if (!isCacheValid || needsRefresh) {
       await loadProperties({ 

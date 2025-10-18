@@ -62,7 +62,8 @@ export function PropertyFormModal({
         area: property.area,
         areaUnit: property.areaUnit === 'm2' ? 'm²' : 'sqft',
         propertyType: property.propertyType,
-        image: property.images?.[0] || '',
+        image: property.images?.[0] ? 
+          (typeof property.images[0] === 'string' ? property.images[0] : property.images[0].file) : '',
       });
     } else if (isOpen && mode === 'create') {
       setFormData({
@@ -132,7 +133,7 @@ export function PropertyFormModal({
     }
   };
 
-  const handleChange = (field: keyof PropertyFormData, value: any) => {
+  const handleChange = (field: keyof PropertyFormData, value: string | number | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => {

@@ -164,7 +164,12 @@ const propertyToSerializable = (property: Property): SerializableProperty => ({
   area: property.area,
   areaUnit: property.areaUnit,
   features: property.features,
-  images: property.images as any,
+  images: property.images as Array<{
+    idPropertyImage: string;
+    idProperty: string;
+    file: string;
+    enabled: boolean;
+  }> | string[],
   status: property.status,
   createdAt: property.createdAt.toISOString(),
   updatedAt: property.updatedAt.toISOString(),
