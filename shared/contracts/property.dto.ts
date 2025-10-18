@@ -1,36 +1,3 @@
-export interface PropertyDto {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  currency: string;
-  location: {
-    address: string;
-    city: string;
-    state: string;
-    country: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-    };
-  };
-  propertyType: 'apartment' | 'house' | 'commercial' | 'land';
-  bedrooms?: number;
-  bathrooms?: number;
-  area: number;
-  areaUnit: 'm2' | 'sqft';
-  features: string[];
-  images: string[];
-  status: 'available' | 'sold' | 'rented';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PropertyListDto {
-  properties: PropertyDto[];
-  pagination: PaginationDto;
-}
-
 export interface PaginationDto {
   page: number;
   limit: number;
@@ -40,7 +7,123 @@ export interface PaginationDto {
   hasPrev: boolean;
 }
 
-// Mock property interface for simplified frontend development
+export interface OwnerDto {
+  idOwner: string;
+  name: string;
+  address: string;
+  photo: string;
+  birthday: string;
+}
+
+export interface OwnerListDto {
+  owners: OwnerDto[];
+  pagination: PaginationDto;
+}
+
+export interface CreateOwnerDto {
+  name: string;
+  address: string;
+  photo?: string;
+  birthday: string;
+}
+
+export interface UpdateOwnerDto {
+  name?: string;
+  address?: string;
+  photo?: string;
+  birthday?: string;
+}
+
+export interface PropertyDto {
+  idProperty: string;
+  name: string;
+  address: string;
+  price: number;
+  codeInternal: string;
+  year: number;
+  idOwner: string;
+}
+
+export interface PropertyDetailDto extends PropertyDto {
+  owner?: OwnerDto;
+  images?: PropertyImageDto[];
+  traces?: PropertyTraceDto[];
+}
+
+export interface PropertyListDto {
+  properties: PropertyDto[];
+  pagination: PaginationDto;
+}
+
+export interface CreatePropertyDto {
+  name: string;
+  address: string;
+  price: number;
+  codeInternal: string;
+  year: number;
+  idOwner: string;
+}
+
+export interface UpdatePropertyDto {
+  name?: string;
+  address?: string;
+  price?: number;
+  codeInternal?: string;
+  year?: number;
+  idOwner?: string;
+}
+
+export interface PropertyImageDto {
+  idPropertyImage: string;
+  idProperty: string;
+  file: string;
+  enabled: boolean;
+}
+
+export interface PropertyImageListDto {
+  images: PropertyImageDto[];
+  pagination: PaginationDto;
+}
+
+export interface CreatePropertyImageDto {
+  file: string;
+  enabled?: boolean;
+}
+
+export interface UpdatePropertyImageDto {
+  file?: string;
+  enabled?: boolean;
+}
+
+export interface PropertyTraceDto {
+  idPropertyTrace: string;
+  dateSale: string;
+  name: string;
+  value: number;
+  tax: number;
+  idProperty: string;
+}
+
+export interface PropertyTraceListDto {
+  traces: PropertyTraceDto[];
+  pagination: PaginationDto;
+}
+
+export interface CreatePropertyTraceDto {
+  dateSale: string;
+  name: string;
+  value: number;
+  tax: number;
+}
+
+export interface UpdatePropertyTraceDto {
+  dateSale?: string;
+  name?: string;
+  value?: number;
+  tax?: number;
+}
+
+// Legacy interfaces for backward compatibility
 export interface MockPropertyDto {
   id: string;
   idOwner: string;
