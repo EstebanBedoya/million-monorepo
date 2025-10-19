@@ -2,34 +2,95 @@
 export class Property {
   constructor(
     public readonly id: string,
-    public readonly title: string,
+    public readonly name: string,
     public readonly description: string,
     public readonly price: number,
     public readonly currency: string,
-    public readonly location: Location,
+    public readonly location: string,
     public readonly propertyType: PropertyType,
-    public readonly bedrooms?: number,
-    public readonly bathrooms?: number,
     public readonly area: number,
     public readonly areaUnit: AreaUnit,
     public readonly features: string[],
-    public readonly images: string[],
+    public readonly images: PropertyImage[] | string[],
     public readonly status: PropertyStatus,
     public readonly createdAt: Date,
-    public readonly updatedAt: Date
+    public readonly updatedAt: Date,
+    public readonly bedrooms?: number,
+    public readonly bathrooms?: number,
+    public readonly year?: number,
+    public readonly owner?: PropertyOwner,
+    public readonly traces?: PropertyTrace[]
   ) {}
 
-  // Business rules
+  public getEnabledImages(): PropertyImage[] {
+    if (this.images.length === 0) return [];
+    
+    if (typeof this.images[0] === 'string') {
+      return this.images.map((img, index) => ({
+        idPropertyImage: `img-${index}`,
+        idProperty: this.id,
+        file: img as string,
+        enabled: true
+      }));
+    }
+    
+    return (this.images as PropertyImage[]).filter(img => img.enabled);
+  }
+
+  static create(data: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    currency: string;
+    location: string;
+    propertyType: string;
+    area: number;
+    areaUnit: string;
+    features: string[];
+    images: PropertyImage[] | string[];
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    year?: number;
+    owner?: PropertyOwner;
+    traces?: PropertyTrace[];
+  }): Property {
+    return new Property(
+      data.id,
+      data.name,
+      data.description,
+      data.price,
+      data.currency,
+      data.location,
+      data.propertyType as PropertyType,
+      data.area,
+      data.areaUnit as AreaUnit,
+      data.features,
+      data.images,
+      data.status as PropertyStatus,
+      new Date(data.createdAt),
+      new Date(data.updatedAt),
+      data.bedrooms,
+      data.bathrooms,
+      data.year,
+      data.owner,
+      data.traces
+    );
+  }
+
   public isAvailable(): boolean {
     return this.status === PropertyStatus.AVAILABLE;
   }
 
   public isExpensive(): boolean {
-    return this.price > 1000000; // Example business rule
+    return this.price > 1000000;
   }
 
   public hasMinimumFeatures(): boolean {
-    return this.features.length >= 3; // Example business rule
+    return this.features.length >= 3;
   }
 
   public getFormattedPrice(): string {
@@ -55,23 +116,27 @@ export enum AreaUnit {
   SQFT = 'sqft'
 }
 
-export class Location {
-  constructor(
-    public readonly address: string,
-    public readonly city: string,
-    public readonly state: string,
-    public readonly country: string,
-    public readonly coordinates?: Coordinates
-  ) {}
-
-  public getFullAddress(): string {
-    return `${this.address}, ${this.city}, ${this.state}, ${this.country}`;
-  }
+export interface PropertyImage {
+  idPropertyImage: string;
+  idProperty: string;
+  file: string;
+  enabled: boolean;
 }
 
-export class Coordinates {
-  constructor(
-    public readonly lat: number,
-    public readonly lng: number
-  ) {}
+export interface PropertyOwner {
+  idOwner: string;
+  name: string;
+  address: string;
+  birthday: string;
+  photo: string;
 }
+
+export interface PropertyTrace {
+  idPropertyTrace: string;
+  dateSale: string;
+  idProperty: string;
+  name: string;
+  tax: number;
+  value: number;
+}
+

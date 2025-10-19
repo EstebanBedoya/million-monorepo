@@ -1,0 +1,162 @@
+---
+description: Specific patterns for handling text in React components with internationalization
+globs: *.tsx
+---
+
+# Component Text Patterns
+
+## Import Pattern
+**ALWAYS** import the i18n hooks at the top of component files:
+```tsx
+import { useDictionary, useLocale } from '@/i18n/client';
+```
+
+## Hook Usage Pattern
+**ALWAYS** use hooks at the beginning of component function:
+```tsx
+export function MyComponent() {
+  const dict = useDictionary();
+  const lang = useLocale();
+  // ... rest of component
+}
+```
+
+## Text Rendering Patterns
+
+### 1. Simple Text
+```tsx
+// ✅ CORRECT
+<h1>{dict.properties.title}</h1>
+<Button>{dict.common.save}</Button>
+
+// ❌ WRONG
+<h1>Properties</h1>
+<Button>Save</Button>
+```
+
+### 2. Conditional Text
+```tsx
+// ✅ CORRECT
+const title = mode === 'create' ? dict.propertyForm.createTitle : dict.propertyForm.editTitle;
+
+// ❌ WRONG
+const title = mode === 'create' ? 'Create Property' : 'Edit Property';
+```
+
+### 3. Dynamic Text with Fallbacks
+```tsx
+// ✅ CORRECT
+const displayMessage = message || dict.common.noResults;
+const displayTitle = title || dict.properties.title;
+
+// ❌ WRONG
+const displayMessage = message || 'No results found';
+```
+
+### 4. Form Labels and Placeholders
+```tsx
+// ✅ CORRECT
+<Label>{dict.propertyForm.name}</Label>
+<Input placeholder={dict.propertyForm.namePlaceholder} />
+
+// ❌ WRONG
+<Label>Property Name</Label>
+<Input placeholder="Enter property name" />
+```
+
+### 5. Error Messages
+```tsx
+// ✅ CORRECT
+{errors.name && <span className="text-red-500">{dict.propertyForm.required}</span>}
+
+// ❌ WRONG
+{errors.name && <span className="text-red-500">This field is required</span>}
+```
+
+### 6. Navigation Links
+```tsx
+// ✅ CORRECT
+<Link href={`/${lang}/properties`}>
+  {dict.properties.backToProperties}
+</Link>
+
+// ❌ WRONG
+<Link href="/properties">
+  Back to Properties
+</Link>
+```
+
+### 7. Button Actions
+```tsx
+// ✅ CORRECT
+<Button onClick={onSave}>{dict.common.save}</Button>
+<Button onClick={onCancel}>{dict.common.cancel}</Button>
+
+// ❌ WRONG
+<Button onClick={onSave}>Save</Button>
+<Button onClick={onCancel}>Cancel</Button>
+```
+
+### 8. Loading States
+```tsx
+// ✅ CORRECT
+{loading && <LoadingState message={dict.common.loading} />}
+
+// ❌ WRONG
+{loading && <LoadingState message="Loading..." />}
+```
+
+### 9. Empty States
+```tsx
+// ✅ CORRECT
+<EmptyState 
+  title={dict.properties.noProperties}
+  message={dict.common.noResults}
+/>
+
+// ❌ WRONG
+<EmptyState 
+  title="No properties found"
+  message="No results found"
+/>
+```
+
+### 10. Modal Titles
+```tsx
+// ✅ CORRECT
+<Modal title={dict.propertyForm.createTitle}>
+  {/* content */}
+</Modal>
+
+// ❌ WRONG
+<Modal title="Create Property">
+  {/* content */}
+</Modal>
+```
+
+## Component Structure Template
+```tsx
+'use client';
+
+import { useDictionary, useLocale } from '@/i18n/client';
+// ... other imports
+
+export function MyComponent() {
+  const dict = useDictionary();
+  const lang = useLocale();
+  
+  return (
+    <div>
+      <h1>{dict.section.title}</h1>
+      <Button>{dict.common.save}</Button>
+    </div>
+  );
+}
+```
+
+## Common Mistakes to Avoid
+1. **NEVER** hardcode any user-facing text
+2. **NEVER** forget to import the i18n hooks
+3. **NEVER** use string literals in JSX for user text
+4. **ALWAYS** use the dictionary structure consistently
+5. **ALWAYS** provide fallbacks for optional text

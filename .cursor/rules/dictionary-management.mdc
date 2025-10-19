@@ -1,0 +1,231 @@
+---
+description: Guidelines for managing and extending the internationalization dictionary
+globs: *.ts,*.json
+---
+
+# Dictionary Management Guidelines
+
+## Dictionary File Structure
+
+### 1. Type Definitions
+**ALWAYS** define types first in [types.ts](mdc:apps/web/src/i18n/types.ts):
+```typescript
+export interface Dictionary {
+  common: {
+    loading: string;
+    error: string;
+    // ... other common keys
+  };
+  properties: {
+    title: string;
+    createProperty: string;
+    // ... other property keys
+  };
+  // ... other sections
+}
+```
+
+### 2. JSON Structure
+**ALWAYS** maintain identical structure across all language files:
+- [en.json](mdc:apps/web/src/i18n/dictionaries/en.json) - English translations
+- [es.json](mdc:apps/web/src/i18n/dictionaries/es.json) - Spanish translations
+
+### 3. Adding New Text Keys
+
+#### Step 1: Add to TypeScript Interface
+```typescript
+// In types.ts
+export interface Dictionary {
+  common: {
+    // ... existing keys
+    newAction: string;  // Add new key here
+  };
+  newSection: {        // Or add new section
+    title: string;
+    description: string;
+  };
+}
+```
+
+#### Step 2: Add to All Language Files
+```json
+// In en.json
+{
+  "common": {
+    "newAction": "New Action"
+  },
+  "newSection": {
+    "title": "New Section",
+    "description": "Description text"
+  }
+}
+
+// In es.json
+{
+  "common": {
+    "newAction": "Nueva Acción"
+  },
+  "newSection": {
+    "title": "Nueva Sección", 
+    "description": "Texto de descripción"
+  }
+}
+```
+
+## Dictionary Organization
+
+### 1. Section Categories
+```typescript
+// Common actions used across the app
+common: {
+  loading, error, retry, cancel, confirm, save, delete, edit, create, close
+}
+
+// Feature-specific sections
+properties: { /* property-related text */ }
+propertyForm: { /* form-specific text */ }
+propertyDetail: { /* detail page text */ }
+filters: { /* filter-related text */ }
+errors: { /* error messages */ }
+pagination: { /* pagination text */ }
+```
+
+### 2. Naming Conventions
+- **Use camelCase**: `propertyForm`, `backToProperties`
+- **Be descriptive**: `createProperty` not `create`
+- **Use consistent suffixes**: `Placeholder`, `Label`, `Title`
+- **Group related keys**: `propertyForm.name`, `propertyForm.namePlaceholder`
+
+### 3. Key Patterns
+```typescript
+// Form fields
+fieldName: "Field Label"
+fieldNamePlaceholder: "Enter field value"
+fieldNameRequired: "This field is required"
+fieldNameInvalid: "Invalid field value"
+
+// Actions
+actionName: "Action Label"
+actionNameConfirm: "Confirm action"
+actionNameSuccess: "Action completed successfully"
+
+// Navigation
+backToSection: "Back to Section"
+viewSection: "View Section"
+```
+
+## Translation Guidelines
+
+### 1. English (en.json)
+- **Use clear, concise English**
+- **Use proper capitalization**
+- **Be consistent with terminology**
+- **Use present tense for actions**
+
+### 2. Spanish (es.json)
+- **Use proper Spanish grammar**
+- **Use appropriate formality level**
+- **Maintain consistency with English structure**
+- **Use proper Spanish punctuation**
+
+### 3. Translation Examples
+```json
+// English
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "propertyForm": {
+    "name": "Property Name",
+    "namePlaceholder": "Enter property name"
+  }
+}
+
+// Spanish
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "propertyForm": {
+    "name": "Nombre de la Propiedad",
+    "namePlaceholder": "Ingrese el nombre de la propiedad"
+  }
+}
+```
+
+## Maintenance Rules
+
+### 1. Adding New Languages
+1. **Add locale to config**: [config.ts](mdc:apps/web/src/i18n/config.ts)
+2. **Create dictionary file**: `dictionaries/[lang].json`
+3. **Update getDictionary**: [get-dictionary.ts](mdc:apps/web/src/i18n/get-dictionary.ts)
+4. **Update middleware**: [middleware.ts](mdc:apps/web/src/middleware.ts)
+
+### 2. Key Management
+- **NEVER** remove keys without checking all usages
+- **ALWAYS** add new keys to all language files
+- **ALWAYS** update TypeScript interface when adding keys
+- **ALWAYS** test all languages after changes
+
+### 3. Validation
+- **ALWAYS** ensure all language files have identical structure
+- **ALWAYS** verify all keys are used in components
+- **ALWAYS** check for missing translations
+- **ALWAYS** validate JSON syntax
+
+## Common Dictionary Sections
+
+### 1. Common Actions
+```typescript
+common: {
+  loading: "Loading...",
+  error: "Error", 
+  retry: "Retry",
+  cancel: "Cancel",
+  confirm: "Confirm",
+  save: "Save",
+  delete: "Delete",
+  edit: "Edit",
+  create: "Create",
+  close: "Close",
+  back: "Back",
+  next: "Next",
+  previous: "Previous",
+  search: "Search",
+  filter: "Filter",
+  clear: "Clear",
+  apply: "Apply"
+}
+```
+
+### 2. Form Patterns
+```typescript
+propertyForm: {
+  createTitle: "Create New Property",
+  editTitle: "Edit Property", 
+  name: "Property Name",
+  namePlaceholder: "Enter property name",
+  submit: "Save Property",
+  cancel: "Cancel",
+  required: "This field is required"
+}
+```
+
+### 3. Error Messages
+```typescript
+errors: {
+  generic: "An error occurred. Please try again.",
+  network: "Network error. Please check your connection.",
+  notFound: "Resource not found.",
+  unauthorized: "You are not authorized to perform this action."
+}
+```
+
+## Remember
+- **MAINTAIN** identical structure across all language files
+- **ALWAYS** update TypeScript interface when adding keys
+- **ALWAYS** provide translations for all supported languages
+- **NEVER** remove keys without checking all usages
+- **ALWAYS** test internationalization after changes

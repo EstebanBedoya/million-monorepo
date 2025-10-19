@@ -2,11 +2,11 @@ import { Middleware } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 
 // Persistence middleware for localStorage
-export const persistenceMiddleware: Middleware<object, RootState> = (store) => (next) => (action) => {
+export const persistenceMiddleware: Middleware = (store) => (next) => (action: unknown) => {
   const result = next(action);
   
   // Save to localStorage on specific actions
-  if (action.type.startsWith('properties/') || action.type.startsWith('ui/')) {
+  if ((action as { type: string }).type.startsWith('properties/') || (action as { type: string }).type.startsWith('ui/')) {
     try {
       const state = store.getState();
       localStorage.setItem('redux-state', JSON.stringify({
@@ -23,6 +23,11 @@ export const persistenceMiddleware: Middleware<object, RootState> = (store) => (
 
 // Load state from localStorage
 export const loadStateFromStorage = (): Partial<RootState> | undefined => {
+  // Only load from localStorage on client side
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
   try {
     const serializedState = localStorage.getItem('redux-state');
     if (serializedState === null) {

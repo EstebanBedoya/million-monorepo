@@ -1,0 +1,33 @@
+---
+alwaysApply: true
+description: Component reuse and composition guidelines
+---
+
+# Component Reuse Guidelines
+
+## Always Prefer Existing Components
+- Before creating new components, check if existing atoms/molecules can be reused
+- Look for similar functionality in [atoms](mdc:apps/web/src/presentation/components/atoms/) and [molecules](mdc:apps/web/src/presentation/components/molecules/)
+- Compose complex components from simpler existing ones
+
+## Component Hierarchy
+- **Atoms**: Basic UI elements (Button, Input, Label, etc.)
+- **Molecules**: Combinations of atoms (SearchInput, PriceRange, etc.)
+- **Organisms**: Complex components (FiltersBar, PropertyCard, etc.)
+
+## Reuse Strategy
+1. Check existing components first
+2. If functionality is 80% similar, extend existing component
+3. If completely different, create new component
+4. Always export new components in appropriate index files
+
+## Examples of Good Reuse
+- Use existing `Input` component instead of creating new input
+- Use existing `Button` component for all buttons
+- Compose complex forms from existing form atoms
+- Reuse `Label` component for all labels
+
+## Anti-patterns to Avoid
+- Creating duplicate components with similar functionality
+- Not checking existing components before creating new ones
+- Hardcoding styles instead of using existing component variants

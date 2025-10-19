@@ -1,25 +1,64 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { MockPropertyType } from '../../domain/schemas/property.schema';
-import { PropertyCard } from './PropertyCard';
-import { PropertyListSkeleton } from './PropertyCardSkeleton';
-import { EmptyState } from './EmptyState';
+import { PropertyCard } from './organisms/PropertyCard';
+import { PropertyCardSkeleton } from './molecules/PropertyCardSkeleton';
+import { EmptyState } from './molecules/EmptyState';
+import { ErrorState } from './molecules/ErrorState';
 
 interface PropertyListProps {
   properties: MockPropertyType[];
   onPropertyClick?: (property: MockPropertyType) => void;
+  onPropertyEdit?: (property: MockPropertyType) => void;
+  onPropertyDelete?: (property: MockPropertyType) => void;
   loading?: boolean;
+  error?: Error | string | null;
+  onRetry?: () => void;
   onClearFilters?: () => void;
+  showActions?: boolean;
 }
 
 export function PropertyList({ 
   properties, 
   onPropertyClick, 
-  loading,
-  onClearFilters 
+  onPropertyEdit,
+  onPropertyDelete,
+  loading, 
+  error, 
+  onRetry, 
+  onClearFilters,
+  showActions = true
 }: PropertyListProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show loading skeleton during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <PropertyCardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorState error={error} onRetry={onRetry} />;
+  }
+
   if (loading) {
-    return <PropertyListSkeleton count={12} />;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <PropertyCardSkeleton key={index} />
+        ))}
+      </div>
+    );
   }
 
   if (properties.length === 0) {
@@ -27,18 +66,16 @@ export function PropertyList({
   }
 
   return (
-    <div 
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-      role="list"
-      aria-label="Properties list"
-    >
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {properties.map((property) => (
-        <div key={property.id} role="listitem">
-          <PropertyCard
-            property={property}
-            onViewDetails={onPropertyClick}
-          />
-        </div>
+        <PropertyCard
+          key={property.id}
+          property={property}
+          onViewDetails={onPropertyClick}
+          onEdit={onPropertyEdit}
+          onDelete={onPropertyDelete}
+          showActions={showActions}
+        />
       ))}
     </div>
   );

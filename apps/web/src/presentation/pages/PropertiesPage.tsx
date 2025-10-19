@@ -1,12 +1,19 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MockPropertyType } from '../../domain/schemas/property.schema';
-import { PropertyList } from '../components/PropertyList';
-import { FiltersBar, FilterValues } from '../components/FiltersBar';
-import { Pagination } from '../components/Pagination';
-import { ThemeToggle } from '../components/ThemeToggle';
+import { MockPropertyType } from '@/domain/schemas/property.schema';
+import { PropertyList } from '@/presentation/components/PropertyList';
+import { Sidebar } from '@/presentation/components/organisms/Sidebar';
+import { Pagination } from '@/presentation/components/organisms/Pagination';
+import { PaginationSkeleton } from '@/presentation/components/molecules/PaginationSkeleton';
+import { FilterValues } from '@/presentation/components/organisms/FiltersBar';
+import { ConfirmDialog } from '@/presentation/components/atoms/ConfirmDialog';
+import { usePropertiesRedux } from '@/presentation/hooks/usePropertiesRedux';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { selectPaginatedProperties, selectFilteredPagination } from '@/store/selectors/propertySelectors';
+import { deleteProperty } from '@/store/slices/propertySlice';
+import { useDictionary, useLocale } from '@/i18n/client';
 
 interface PropertiesPageProps {
   initialProperties?: MockPropertyType[];
@@ -20,37 +27,75 @@ interface PropertiesPageProps {
   };
 }
 
-export function PropertiesPage({ 
-  initialProperties = [], 
-  initialPagination 
+// Internal component that uses search params
+function PropertiesPageContent({
+  initialProperties: _initialProperties = [],
+  initialPagination: _initialPagination
 }: PropertiesPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
+  const dict = useDictionary();
+  const lang = useLocale();
+  const [mounted, setMounted] = useState(false);
+
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
-  // State
-  const [properties, setProperties] = useState<MockPropertyType[]>(initialProperties);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState(initialPagination || {
-    page: 1,
-    limit: 12,
-    total: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrev: false,
-  });
+  // Redux hooks
+  const {
+    filteredProperties: _filteredProperties,
+    isLoading: loading,
+    error,
+    pagination,
+    currentFilter: _currentFilter,
+    searchFilters: _searchFilters,
+    loadProperties,
+    loadAvailableProperties: _loadAvailableProperties,
+    loadExpensiveProperties: _loadExpensiveProperties,
+    changeFilter: _changeFilter,
+    updateSearchFilters,
+    clearFilters,
+    clearError: _clearError,
+    isCacheValid,
+    needsRefresh,
+  } = usePropertiesRedux();
+
+  // Local state (UI only)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isChangingPage, setIsChangingPage] = useState(false);
+  
+  // Delete modal state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<MockPropertyType | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get filters from URL
   const getFiltersFromURL = useCallback((): FilterValues => {
     return {
       search: searchParams.get('search') || '',
       minPrice: Number(searchParams.get('minPrice')) || 0,
-      maxPrice: Number(searchParams.get('maxPrice')) || 5000000,
+      maxPrice: Number(searchParams.get('maxPrice')) || 1000000000,
       propertyType: searchParams.get('propertyType') || '',
     };
   }, [searchParams]);
 
   const [filters, setFilters] = useState<FilterValues>(getFiltersFromURL());
-  const currentPage = Number(searchParams.get('page')) || 1;
+
+  // Use refs to avoid dependency issues
+  const filtersRef = useRef(filters);
+  const routerRef = useRef(router);
+
+  // Update refs when values change
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
 
   // Update URL with filters
   const updateURL = useCallback((newFilters: FilterValues, page: number = 1) => {
@@ -58,65 +103,101 @@ export function PropertiesPage({
     
     if (newFilters.search) params.set('search', newFilters.search);
     if (newFilters.minPrice > 0) params.set('minPrice', newFilters.minPrice.toString());
-    if (newFilters.maxPrice < 5000000) params.set('maxPrice', newFilters.maxPrice.toString());
+    if (newFilters.maxPrice < 1000000000) params.set('maxPrice', newFilters.maxPrice.toString());
     if (newFilters.propertyType) params.set('propertyType', newFilters.propertyType);
     if (page > 1) params.set('page', page.toString());
 
-    router.push(`/?${params.toString()}`, { scroll: false });
-  }, [router]);
+    const queryString = params.toString();
+    const url = queryString ? `/${lang}/properties?${queryString}` : `/${lang}/properties`;
+    routerRef.current.push(url, { scroll: false });
+  }, [lang]);
 
-  // Fetch properties
-  const fetchProperties = useCallback(async (filterValues: FilterValues, page: number) => {
-    setLoading(true);
-    
-    try {
-      const params = new URLSearchParams();
-      params.set('page', page.toString());
-      params.set('limit', '12');
-      
-      if (filterValues.search) params.set('search', filterValues.search);
-      if (filterValues.minPrice > 0) params.set('minPrice', filterValues.minPrice.toString());
-      if (filterValues.maxPrice < 5000000) params.set('maxPrice', filterValues.maxPrice.toString());
-
-      const response = await fetch(`/api/mock/properties?${params.toString()}`);
-      const data = await response.json();
-
-      setProperties(data.properties || []);
-      setPagination(data.pagination);
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-      setProperties([]);
-    } finally {
-      setLoading(false);
+  // Load properties using Redux (load all properties once)
+  const loadPropertiesData = useCallback(async (filterValues: FilterValues, _page: number) => {
+    // Check if we need to refresh data
+    if (!isCacheValid || needsRefresh) {
+      await loadProperties({ 
+        page: 1, // Always load from page 1 to get all properties
+        limit: 1000 // Load a large number to get all properties
+      });
     }
-  }, []);
+  }, [loadProperties, isCacheValid, needsRefresh]);
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: FilterValues) => {
     setFilters(newFilters);
     updateURL(newFilters, 1);
-    fetchProperties(newFilters, 1);
-  }, [updateURL, fetchProperties]);
+    
+    // Update Redux filters
+    updateSearchFilters({
+      search: newFilters.search,
+      minPrice: newFilters.minPrice,
+      maxPrice: newFilters.maxPrice,
+      propertyType: newFilters.propertyType || '',
+    });
+  }, [updateSearchFilters, updateURL]);
 
   // Handle page changes
   const handlePageChange = useCallback((page: number) => {
-    updateURL(filters, page);
-    fetchProperties(filters, page);
+    setIsChangingPage(true);
+    updateURL(filtersRef.current, page);
+    // No need to reload data, just update URL for client-side pagination
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [filters, updateURL, fetchProperties]);
+    
+    // Reset changing page state after a short delay to show smooth transition
+    setTimeout(() => {
+      setIsChangingPage(false);
+    }, 300);
+  }, [updateURL]);
 
   // Handle clear filters
   const handleClearFilters = useCallback(() => {
     const defaultFilters: FilterValues = {
       search: '',
       minPrice: 0,
-      maxPrice: 5000000,
+      maxPrice: 1000000000,
       propertyType: '',
     };
     setFilters(defaultFilters);
     updateURL(defaultFilters, 1);
-    fetchProperties(defaultFilters, 1);
-  }, [updateURL, fetchProperties]);
+    
+    // Clear Redux filters
+    clearFilters();
+  }, [clearFilters, updateURL]);
+
+  // CRUD handlers
+  const handleCreateProperty = useCallback(() => {
+    router.push(`/${lang}/properties/new`);
+  }, [router, lang]);
+
+  const handleEditProperty = useCallback((property: MockPropertyType) => {
+    router.push(`/${lang}/properties/${property.id}/edit`);
+  }, [router, lang]);
+
+  const handleDeleteProperty = useCallback((property: MockPropertyType) => {
+    setPropertyToDelete(property);
+    setIsDeleteDialogOpen(true);
+  }, []);
+
+  const handleConfirmDelete = async () => {
+    if (!propertyToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteProperty(propertyToDelete.id)).unwrap();
+      setIsDeleteDialogOpen(false);
+      setPropertyToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete property:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = useCallback(() => {
+    setIsDeleteDialogOpen(false);
+    setPropertyToDelete(null);
+  }, []);
 
   // Initial load from URL params
   useEffect(() => {
@@ -124,94 +205,205 @@ export function PropertiesPage({
     const page = Number(searchParams.get('page')) || 1;
     
     setFilters(urlFilters);
-    fetchProperties(urlFilters, page);
+    
+    // Load properties first, then apply filters
+    loadPropertiesData(urlFilters, page).then(() => {
+      // Sync filters with Redux after properties are loaded
+      updateSearchFilters({
+        search: urlFilters.search,
+        minPrice: urlFilters.minPrice,
+        maxPrice: urlFilters.maxPrice,
+        propertyType: urlFilters.propertyType || '',
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
-  // Memoized filtered properties (for client-side additional filtering if needed)
+
+  // Get current page from URL
+  const currentPage = Number(searchParams.get('page')) || 1;
+  const limit = 12;
+
+  // Use client-side pagination for filtered properties
+  const paginatedProperties = useAppSelector(selectPaginatedProperties(currentPage, limit));
+  const filteredPagination = useAppSelector(selectFilteredPagination(currentPage, limit));
+
   const displayedProperties = useMemo(() => {
-    let filtered = [...properties];
-
-    // Additional client-side filtering by property type if needed
-    if (filters.propertyType) {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
-    }
-
-    return filtered;
-  }, [properties, filters.propertyType]);
+    // Map PropertyType enum to MockPropertyType string
+    const mapPropertyType = (type: string): 'House' | 'Apartment' | 'Villa' | 'Condo' | 'Townhouse' | 'Studio' => {
+      const typeMap: Record<string, 'House' | 'Apartment' | 'Villa' | 'Condo' | 'Townhouse' | 'Studio'> = {
+        'house': 'House',
+        'apartment': 'Apartment',
+        'commercial': 'Condo',
+        'land': 'Villa',
+      };
+      return typeMap[type.toLowerCase()] || 'House';
+    };
+    
+    // Convert Redux properties to MockPropertyType format for PropertyList
+    return paginatedProperties.map((property) => {
+      const locationParts = property.location.split(',');
+      const address = locationParts[0]?.trim() || property.location;
+      const city = locationParts.slice(1).join(',').trim() || 'Unknown City';
+      
+      // Extract first image - handle both string array and object array
+      let firstImage = '/placeholder-property.jpg';
+      if (property.images && property.images.length > 0) {
+        const img = property.images[0];
+        firstImage = typeof img === 'string' ? img : img.file;
+      }
+      
+      return {
+        id: property.id,
+        idOwner: 'owner-001',
+        name: property.name,
+        address: address,
+        city: city,
+        price: property.price,
+        image: firstImage,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        area: property.area,
+        areaUnit: property.areaUnit === 'm2' ? 'm²' as const : 'sqft' as const,
+        propertyType: mapPropertyType(property.propertyType),
+      };
+    });
+  }, [paginatedProperties]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Theme Toggle */}
-      <ThemeToggle />
+    <div className="min-h-screen bg-background flex flex-col">
       
       {/* Header */}
       <header className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-foreground mb-3">
-              ESTATELY
+              {dict.header.title}
             </h1>
             <p className="text-xl text-accent mb-2">
-              Find Your Dream Home
+              {dict.header.subtitle}
             </p>
             <p className="text-secondary max-w-2xl mx-auto">
-              Discover exceptional properties with elegant design and unparalleled luxury
+              {dict.header.description}
             </p>
           </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters */}
-        <FiltersBar 
+      {/* Main layout with sidebar */}
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <Sidebar
           onFilterChange={handleFilterChange}
           defaultFilters={filters}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          onClose={() => setSidebarOpen(false)}
         />
 
-        {/* Results count */}
-        {!loading && (
-          <div className="mb-6">
-            <p className="text-sm text-secondary">
-              {pagination.total > 0 ? (
-                <>
-                  Showing <span className="font-medium text-foreground">{properties.length}</span> of{' '}
-                  <span className="font-medium text-foreground">{pagination.total}</span> properties
-                </>
-              ) : (
-                'No properties found'
-              )}
-            </p>
+        {/* Main content area */}
+        <main className="flex-1 lg:ml-0">
+          <div className="p-4 sm:p-6 lg:p-8">
+            {/* Mobile filter toggle button */}
+            <div className="lg:hidden mb-6">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                </svg>
+                {dict.filters.mobileFilters}
+              </button>
+            </div>
+
+            {/* Results count and Create button */}
+            {!loading && mounted && (
+              <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <p className="text-sm text-secondary">
+                  {filteredPagination && filteredPagination.total > 0 ? (
+                    <>
+                      {dict.properties.showing} <span className="font-medium text-foreground">{displayedProperties.length}</span> {dict.properties.of}{' '}
+                      <span className="font-medium text-foreground">{filteredPagination.total}</span> {dict.properties.properties}
+                    </>
+                  ) : (
+                    dict.properties.noProperties
+                  )}
+                </p>
+                <button
+                  onClick={handleCreateProperty}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:px-4 sm:py-2 bg-accent text-accent-foreground rounded-lg sm:rounded-md hover:bg-accent/90 transition-all shadow-md hover:shadow-lg font-medium"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="sm:inline">{dict.properties.createProperty}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Property list */}
+            <PropertyList 
+              properties={displayedProperties}
+              loading={loading}
+              error={error}
+              onRetry={() => loadProperties({ page: pagination?.page || 1, limit: 12 })}
+              onClearFilters={handleClearFilters}
+              onPropertyEdit={handleEditProperty}
+              onPropertyDelete={handleDeleteProperty}
+              showActions={true}
+            />
+
+            {/* Pagination */}
+            {loading || isChangingPage ? (
+              <PaginationSkeleton />
+            ) : (
+              mounted && displayedProperties.length > 0 && filteredPagination && (
+                <div className="mt-8">
+                  <Pagination
+                    currentPage={filteredPagination.page}
+                    totalPages={filteredPagination.totalPages}
+                    onPageChange={handlePageChange}
+                    hasNext={filteredPagination.hasNext}
+                    hasPrev={filteredPagination.hasPrev}
+                  />
+                </div>
+              )
+            )}
           </div>
-        )}
-
-        {/* Property list */}
-        <PropertyList 
-          properties={displayedProperties}
-          loading={loading}
-          onClearFilters={handleClearFilters}
-        />
-
-        {/* Pagination */}
-        {!loading && properties.length > 0 && (
-          <Pagination
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-            hasNext={pagination.hasNext}
-            hasPrev={pagination.hasPrev}
-          />
-        )}
-      </main>
+        </main>
+      </div>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border mt-16">
+      <footer className="bg-card border-t border-border mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-sm text-secondary">
-            <p>© 2025 ESTATELY. Luxury Real Estate Platform.</p>
+            <p>{dict.footer.copyright}</p>
           </div>
         </div>
       </footer>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title={dict.properties.deleteProperty}
+        message={`${dict.properties.confirmDelete} "${propertyToDelete?.name}"? ${dict.properties.deleteWarning}`}
+        confirmLabel={dict.common.delete}
+        cancelLabel={dict.common.cancel}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
+  );
+}
+
+// Wrapper component with Suspense boundary for useSearchParams
+export function PropertiesPage(props: PropertiesPageProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PropertiesPageContent {...props} />
+    </Suspense>
   );
 }

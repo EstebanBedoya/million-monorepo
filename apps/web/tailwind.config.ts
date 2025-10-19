@@ -50,13 +50,23 @@ const config: Config = {
         secondary: 'var(--secondary)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'Inter', 'Arial', 'Helvetica', 'sans-serif'],
-        serif: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif'],
+        sans: ['var(--font-cinzel)', 'Cinzel', 'Georgia', 'serif'],
+        serif: ['var(--font-cinzel)', 'Cinzel', 'Georgia', 'serif'],
         mono: ['var(--font-geist-mono)', 'monospace'],
+        cairo: ['var(--font-cairo)', 'Cairo', 'Inter', 'Arial', 'sans-serif'],
       },
       boxShadow: {
         'soft': '0 2px 8px rgba(0, 0, 0, 0.1)',
         'soft-dark': '0 2px 8px rgba(0, 0, 0, 0.3)',
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      animation: {
+        shimmer: 'shimmer 2s infinite',
       },
     },
   },

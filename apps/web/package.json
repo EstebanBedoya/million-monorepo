@@ -12,11 +12,17 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@formatjs/intl-localematcher": "^0.6.2",
     "@reduxjs/toolkit": "^2.9.0",
+    "axios": "^1.12.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.545.0",
+    "negotiator": "^1.0.0",
     "next": "15.5.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -24,6 +30,7 @@
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
     "@types/jest": "^29.5.8",
+    "@types/negotiator": "^0.6.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

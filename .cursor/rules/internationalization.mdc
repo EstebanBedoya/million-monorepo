@@ -1,0 +1,100 @@
+---
+description: Internationalization and text handling guidelines for the MILLION project
+globs: *.tsx,*.ts,*.json
+---
+
+# Internationalization Guidelines
+
+## Text Usage Rules
+
+### 1. NEVER Use Hardcoded Text
+- **NEVER** write text directly in components like `"Save"`, `"Cancel"`, `"Loading..."`, etc.
+- **ALWAYS** use the internationalization system for ALL user-facing text
+- **EXCEPTION**: Only technical identifiers, CSS classes, or API endpoints can be hardcoded
+
+### 2. Use Dictionary System
+- **ALWAYS** import and use `useDictionary()` hook: `const dict = useDictionary();`
+- **ALWAYS** access text through dictionary: `dict.common.save`, `dict.properties.title`
+- **ALWAYS** use the structured dictionary paths defined in [types.ts](mdc:apps/web/src/i18n/types.ts)
+
+### 3. Dictionary Structure
+Follow the established dictionary structure:
+```typescript
+dict.common.loading          // Common actions
+dict.properties.title        // Feature-specific text
+dict.propertyForm.name       // Form-specific text
+dict.errors.generic          // Error messages
+```
+
+### 4. Adding New Text
+When adding new text:
+1. **FIRST** add the key to [types.ts](mdc:apps/web/src/i18n/types.ts)
+2. **THEN** add translations to both [en.json](mdc:apps/web/src/i18n/dictionaries/en.json) and [es.json](mdc:apps/web/src/i18n/dictionaries/es.json)
+3. **FINALLY** use in components with `dict.section.key`
+
+### 5. Text Patterns
+- **Buttons**: Use `dict.common.save`, `dict.common.cancel`, `dict.common.delete`
+- **Forms**: Use `dict.propertyForm.fieldName` for form labels
+- **Errors**: Use `dict.errors.errorType` for error messages
+- **Navigation**: Use `dict.properties.backToProperties` for navigation
+
+### 6. Examples
+
+#### ✅ CORRECT Usage:
+```tsx
+const dict = useDictionary();
+return (
+  <Button>{dict.common.save}</Button>
+  <h1>{dict.properties.title}</h1>
+  <p>{dict.propertyForm.name}</p>
+);
+```
+
+#### ❌ WRONG Usage:
+```tsx
+return (
+  <Button>Save</Button>           // ❌ Hardcoded text
+  <h1>Properties</h1>            // ❌ Hardcoded text
+  <p>Property Name</p>           // ❌ Hardcoded text
+);
+```
+
+### 7. Locale Context
+- **ALWAYS** use `useLocale()` when you need the current language
+- **ALWAYS** pass locale to navigation: `href={`/${lang}/properties`}`
+- **ALWAYS** use locale for API calls or conditional logic
+
+### 8. File Organization
+- Dictionary types: [i18n/types.ts](mdc:apps/web/src/i18n/types.ts)
+- English translations: [i18n/dictionaries/en.json](mdc:apps/web/src/i18n/dictionaries/en.json)
+- Spanish translations: [i18n/dictionaries/es.json](mdc:apps/web/src/i18n/dictionaries/es.json)
+- Client hooks: [i18n/client.tsx](mdc:apps/web/src/i18n/client.tsx)
+
+### 9. Supported Languages
+- English (`en`) - Default
+- Spanish (`es`)
+- Add new languages by extending the config and adding dictionary files
+
+### 10. Common Dictionary Keys
+```typescript
+// Common actions
+dict.common.loading, dict.common.error, dict.common.save, dict.common.cancel
+dict.common.delete, dict.common.edit, dict.common.create, dict.common.close
+
+// Properties
+dict.properties.title, dict.properties.createProperty, dict.properties.editProperty
+dict.properties.deleteProperty, dict.properties.backToProperties
+
+// Forms
+dict.propertyForm.name, dict.propertyForm.address, dict.propertyForm.price
+dict.propertyForm.submit, dict.propertyForm.cancel
+
+// Errors
+dict.errors.generic, dict.errors.network, dict.errors.notFound
+```
+
+## Remember
+- **EVERY** user-facing text must be internationalized
+- **NO** hardcoded strings in components
+- **ALWAYS** use the dictionary system
+- **MAINTAIN** consistency across all languages

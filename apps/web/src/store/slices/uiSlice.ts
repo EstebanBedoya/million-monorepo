@@ -1,10 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+// Theme type definition
+export type Theme = 'light' | 'dark';
+
 // UI slice state interface
 interface UiState {
   sidebarOpen: boolean;
   modalOpen: boolean;
-  theme: 'light' | 'dark';
+  theme: Theme;
   notifications: Array<{
     id: string;
     message: string;
@@ -38,7 +41,7 @@ const uiSlice = createSlice({
     setModalOpen: (state, action: PayloadAction<boolean>) => {
       state.modalOpen = action.payload;
     },
-    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
+    setTheme: (state, action: PayloadAction<Theme>) => {
       state.theme = action.payload;
     },
     addNotification: (state, action: PayloadAction<{

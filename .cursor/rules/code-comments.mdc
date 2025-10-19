@@ -1,0 +1,53 @@
+---
+alwaysApply: true
+description: Code commenting guidelines
+---
+
+# Code Comments Guidelines
+
+## Avoid Unnecessary Comments
+- Do NOT add obvious comments like `// View Details Button (optional)` or `// Get user data`
+- Do NOT comment every line or simple operations
+- Do NOT add comments that just repeat what the code does
+
+## When to Add Comments
+Only add comments for:
+- Complex business logic that isn't immediately obvious
+- Non-obvious algorithms or mathematical operations
+- Workarounds for external library limitations
+- Performance optimizations that might seem counterintuitive
+- Complex regular expressions or string manipulations
+- Integration points with external systems
+
+## Comment Style
+- Use JSDoc format for function documentation: `/** */`
+- Write comments in English
+- Focus on the "why" not the "what"
+- Keep comments concise and meaningful
+
+## Examples of BAD comments:
+```typescript
+// Get the user
+const user = getUser();
+
+// Check if user exists
+if (user) {
+  // Return user data
+  return user;
+}
+```
+
+## Examples of GOOD comments:
+```typescript
+/**
+ * Calculates compound interest using the formula: A = P(1 + r/n)^(nt)
+ * @param principal - Initial amount
+ * @param rate - Annual interest rate
+ * @param time - Time in years
+ * @param compoundFrequency - Number of times interest compounds per year
+ */
+function calculateCompoundInterest(principal: number, rate: number, time: number, compoundFrequency: number): number {
+  // Using Math.pow for precision with large numbers
+  return principal * Math.pow(1 + rate / compoundFrequency, compoundFrequency * time);
+}
+```

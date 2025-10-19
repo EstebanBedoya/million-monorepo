@@ -45,39 +45,61 @@ services:
       - "5001:5001"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5000;https://+:5001
+      - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__MongoDB=mongodb://admin:password123@mongodb:27017/million_properties?authSource=admin
+      - MongoSettings__DatabaseName=million_properties
+      - MongoSettings__OwnersCollectionName=owners
+      - MongoSettings__PropertiesCollectionName=properties
+      - MongoSettings__PropertyImagesCollectionName=property_images
+      - MongoSettings__PropertyTracesCollectionName=property_traces
     depends_on:
       - mongodb
     networks:
       - million-network
     volumes:
-      - ../apps/api:/app
-      - /app/bin
-      - /app/obj
+      - api_logs:/app/logs
 
-  web:
-    build:
-      context: ../apps/web
-      dockerfile: Dockerfile
-    container_name: million-web
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
+  seed:
+    image: node:18-alpine
+    container_name: million-seed
+    working_dir: /app
+    volumes:
+      - ./db/scripts:/app
+      - ../apps/web/public/mock:/app/mock
+    command: >
+      sh -c "
+        npm install &&
+        npm run seed &&
+        echo 'Seed completado exitosamente!'
+      "
     depends_on:
-      - api
+      - mongodb
     networks:
       - million-network
-    volumes:
-      - ../apps/web:/app
-      - /app/node_modules
-      - /app/.next
+
+  # web:
+  #   build:
+  #     context: ../apps/web
+  #     dockerfile: Dockerfile
+  #   container_name: million-web
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - NEXT_PUBLIC_API_URL=http://localhost:5000
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - million-network
+  #   volumes:
+  #     - ../apps/web:/app
+  #     - /app/node_modules
+  #     - /app/.next
 
 volumes:
   mongodb_data:
+  api_logs:
 
 networks:
   million-network:

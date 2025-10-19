@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ESTATELY - Elegant Real Estate Theme */
+/* MILLION - Elegant Real Estate Theme */
 
 /* Light Theme (Default) - Warm, elegant tones */
 :root {
@@ -95,19 +95,26 @@
   body {
     background: var(--background);
     color: var(--foreground);
-    font-family: 'Playfair Display', 'Georgia', serif;
+    font-family: 'Cinzel', 'Georgia', serif;
     transition: background-color 0.3s ease, color 0.3s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', 'Georgia', serif;
+    font-family: 'Cinzel', 'Georgia', serif;
     font-weight: 600;
   }
 
   input, button, select {
-    font-family: 'Inter', 'Arial', sans-serif;
+    font-family: 'Cinzel', 'Georgia', serif;
+  }
+
+  /* Cairo font for numbers */
+  input[type="number"], 
+  .font-cairo,
+  .price-display {
+    font-family: 'Cairo', 'Inter', 'Arial', sans-serif;
   }
 }
 

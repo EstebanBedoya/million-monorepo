@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { EmptyState } from '../../../src/presentation/components/EmptyState';
+import { EmptyState } from '../../../src/presentation/components/molecules/EmptyState';
 
 describe('EmptyState', () => {
   it('should render with default props', () => {
