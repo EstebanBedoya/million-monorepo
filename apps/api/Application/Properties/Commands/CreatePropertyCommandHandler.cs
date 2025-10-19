@@ -31,6 +31,8 @@ public class CreatePropertyCommandHandler : IRequestHandler<CreatePropertyComman
         }
 
         var property = _mapper.Map<Property>(request.PropertyDto);
+        property.IdProperty = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+        
         var createdProperty = await _propertyRepository.CreateAsync(property, cancellationToken);
         
         return _mapper.Map<PropertyDto>(createdProperty);

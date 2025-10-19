@@ -107,8 +107,9 @@
   "propertyForm": {
     "createTitle": "Create New Property",
     "editTitle": "Edit Property",
+    "basicInformation": "Basic Information",
     "name": "Property Name",
-    "namePlaceholder": "Enter property name",
+    "namePlaceholder": "Modern Villa with Pool",
     "address": "Address",
     "addressPlaceholder": "Enter address",
     "city": "City",
@@ -130,7 +131,26 @@
     "invalidPrice": "Price must be greater than 0",
     "invalidBedrooms": "Bedrooms must be at least 0",
     "invalidBathrooms": "Bathrooms must be at least 0",
-    "invalidArea": "Area must be greater than 0"
+    "invalidArea": "Area must be greater than 0",
+    "codeInternal": "Internal Code",
+    "year": "Year Built",
+    "owner": "Owner",
+    "selectOwner": "Select Owner",
+    "createNewOwner": "Create New Owner",
+    "images": "Images",
+    "addImages": "Add Images",
+    "searchImages": "Search images on Unsplash",
+    "enableImage": "Enable image",
+    "disableImage": "Disable image",
+    "createError": "Failed to create property",
+    "updateError": "Failed to update property"
+  },
+  "ownerForm": {
+    "createTitle": "Create New Owner",
+    "name": "Name",
+    "address": "Address",
+    "photo": "Photo URL",
+    "birthday": "Birthday"
   },
   "notFound": {
     "title": "Property Not Found",
@@ -143,7 +163,8 @@
     "network": "Network error. Please check your connection.",
     "notFound": "Resource not found.",
     "unauthorized": "You are not authorized to perform this action.",
-    "serverError": "Server error. Please try again later."
+    "server": "Server error. Please try again later.",
+    "validation": "Validation error. Please check your input."
   },
   "pagination": {
     "page": "Page",

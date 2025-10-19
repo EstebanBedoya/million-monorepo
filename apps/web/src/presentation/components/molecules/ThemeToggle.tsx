@@ -16,14 +16,14 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   if (!mounted) {
     return (
       <Button
-        variant="secondary"
-        size="lg"
-        className={`fixed top-4 right-4 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-50 ${className}`}
+        variant="ghost"
+        size="sm"
+        className={`p-2 rounded-md hover:bg-secondary transition-colors ${className}`}
         aria-label="Toggle theme"
         title="Toggle theme"
         disabled
       >
-        <div className="w-6 h-6" />
+        <div className="w-5 h-5" />
       </Button>
     );
   }
@@ -33,13 +33,13 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   return (
     <Button
       onClick={toggleTheme}
-      variant="secondary"
-      size="lg"
-      className={`fixed top-4 right-4 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-50 ${className}`}
+      variant="ghost"
+      size="sm"
+      className={`p-2 rounded-md hover:bg-secondary transition-colors ${className}`}
       aria-label="Toggle theme"
       title="Toggle theme"
     >
-      <Icon icon={ThemeIcon} size="lg" aria-hidden={true} />
+      <Icon icon={ThemeIcon} size="sm" aria-hidden={true} />
     </Button>
   );
 }

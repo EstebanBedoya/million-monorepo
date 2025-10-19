@@ -20,6 +20,8 @@ public class CreateOwnerCommandHandler : IRequestHandler<CreateOwnerCommand, Own
     public async Task<OwnerDto> Handle(CreateOwnerCommand request, CancellationToken cancellationToken)
     {
         var owner = _mapper.Map<Owner>(request.OwnerDto);
+        owner.IdOwner = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
+        
         var createdOwner = await _ownerRepository.CreateAsync(owner, cancellationToken);
         
         return _mapper.Map<OwnerDto>(createdOwner);

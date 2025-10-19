@@ -24,27 +24,23 @@ export function LanguageSwitcher({ currentLang }: LanguageSwitcherProps) {
   };
 
   return (
-    <div className="fixed top-4 right-16 z-40">
-      <div className="bg-card border border-border rounded-lg shadow-lg p-2">
-        <div className="flex items-center gap-2">
-          <Icon icon={Globe} size="sm" className="text-accent" />
-          <div className="flex gap-1">
-            {i18n.locales.map((locale) => (
-              <button
-                key={locale}
-                onClick={() => switchLanguage(locale)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  currentLang === locale
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-secondary hover:bg-secondary/10'
-                }`}
-                aria-label={`Switch to ${locale === 'en' ? 'English' : 'Spanish'}`}
-              >
-                {locale.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="flex items-center gap-2">
+      <Icon icon={Globe} size="sm" className="text-muted-foreground" />
+      <div className="flex gap-1">
+        {i18n.locales.map((locale) => (
+          <button
+            key={locale}
+            onClick={() => switchLanguage(locale)}
+            className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
+              currentLang === locale
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+            }`}
+            aria-label={`Switch to ${locale === 'en' ? 'English' : 'Spanish'}`}
+          >
+            {locale.toUpperCase()}
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -3,6 +3,13 @@ import { PropertyRepositoryImpl } from '@/infrastructure/repositories/PropertyRe
 import { PropertyServiceImpl } from '@/application/services/PropertyServiceImpl';
 import { HttpClient, HttpClientConfig } from '@/infrastructure/http/HttpClient';
 import { PropertyApiClient } from '@/infrastructure/api/PropertyApiClient';
+import { OwnerRepository } from '@/domain/repositories/OwnerRepository';
+import { OwnerRepositoryImpl } from '@/infrastructure/repositories/OwnerRepositoryImpl';
+import { OwnerApiClient } from '@/infrastructure/api/OwnerApiClient';
+import { PropertyImageApiClient } from '@/infrastructure/api/PropertyImageApiClient';
+import { GetOwnersUseCase } from '@/application/use-cases/GetOwnersUseCase';
+import { CreateOwnerUseCase } from '@/application/use-cases/CreateOwnerUseCase';
+import { CreatePropertyImageUseCase } from '@/application/use-cases/CreatePropertyImageUseCase';
 
 /**
  * Dependency Injection Container singleton for managing application-wide services.
@@ -50,17 +57,30 @@ export class Container {
     // Register HTTP client (singleton)
     this.services.set('HttpClient', new HttpClient(httpConfig));
     
-    // Register API client
+    // Register API clients
     const httpClient = this.services.get('HttpClient') as HttpClient;
     this.services.set('PropertyApiClient', new PropertyApiClient(httpClient));
+    this.services.set('OwnerApiClient', new OwnerApiClient(httpClient));
+    this.services.set('PropertyImageApiClient', new PropertyImageApiClient(httpClient));
     
-    // Register repository with dependencies
+    // Register repositories with dependencies
     const propertyApiClient = this.services.get('PropertyApiClient') as PropertyApiClient;
     this.services.set('PropertyRepository', new PropertyRepositoryImpl(propertyApiClient));
+    
+    const ownerApiClient = this.services.get('OwnerApiClient') as OwnerApiClient;
+    this.services.set('OwnerRepository', new OwnerRepositoryImpl(ownerApiClient));
     
     // Register services
     const propertyRepository = this.services.get('PropertyRepository') as PropertyRepository;
     this.services.set('PropertyService', new PropertyServiceImpl(propertyRepository));
+    
+    // Register use cases
+    const ownerRepository = this.services.get('OwnerRepository') as OwnerRepository;
+    this.services.set('GetOwnersUseCase', new GetOwnersUseCase(ownerRepository));
+    this.services.set('CreateOwnerUseCase', new CreateOwnerUseCase(ownerRepository));
+    
+    const propertyImageApiClient = this.services.get('PropertyImageApiClient') as PropertyImageApiClient;
+    this.services.set('CreatePropertyImageUseCase', new CreatePropertyImageUseCase(propertyImageApiClient));
   }
 
   public get<T>(serviceName: string): T {

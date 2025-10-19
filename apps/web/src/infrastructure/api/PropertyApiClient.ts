@@ -1,4 +1,4 @@
-import { PropertyDto } from '@/shared/contracts/property.dto';
+import { PropertyDto, CreatePropertyDto, UpdatePropertyDto } from '@/shared/contracts/property.dto';
 import { HttpClient, RequestConfig } from '@/infrastructure/http/HttpClient';
 
 export interface PropertyApiFilters {
@@ -73,7 +73,7 @@ export class PropertyApiClient {
     return await this.httpClient.get<PropertyDto>(`/properties/${id}`, config);
   }
 
-  async createProperty(propertyData: Partial<PropertyDto>): Promise<PropertyDto> {
+  async createProperty(propertyData: CreatePropertyDto): Promise<PropertyDto> {
     const config: RequestConfig = {
       retry: false,
       skipLogging: false,
@@ -82,7 +82,7 @@ export class PropertyApiClient {
     return await this.httpClient.post<PropertyDto>('/properties', propertyData, config);
   }
 
-  async updateProperty(id: string, propertyData: Partial<PropertyDto>): Promise<PropertyDto> {
+  async updateProperty(id: string, propertyData: UpdatePropertyDto): Promise<PropertyDto> {
     const config: RequestConfig = {
       retry: false,
       skipLogging: false,

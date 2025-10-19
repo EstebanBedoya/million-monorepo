@@ -8,13 +8,11 @@ import { Sidebar } from '@/presentation/components/organisms/Sidebar';
 import { Pagination } from '@/presentation/components/organisms/Pagination';
 import { PaginationSkeleton } from '@/presentation/components/molecules/PaginationSkeleton';
 import { FilterValues } from '@/presentation/components/organisms/FiltersBar';
-import { PropertyFormModal, PropertyFormData } from '@/presentation/components/organisms/PropertyFormModal';
 import { ConfirmDialog } from '@/presentation/components/atoms/ConfirmDialog';
 import { usePropertiesRedux } from '@/presentation/hooks/usePropertiesRedux';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { selectPaginatedProperties, selectFilteredPagination } from '@/store/selectors/propertySelectors';
-import { updateProperty, deleteProperty, createProperty, SerializableProperty } from '@/store/slices/propertySlice';
-import { PropertyStatus, PropertyType, AreaUnit } from '@/domain/entities/Property';
+import { deleteProperty } from '@/store/slices/propertySlice';
 import { useDictionary, useLocale } from '@/i18n/client';
 
 interface PropertiesPageProps {
@@ -69,10 +67,7 @@ function PropertiesPageContent({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isChangingPage, setIsChangingPage] = useState(false);
   
-  // CRUD modals state
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-  const [selectedProperty, setSelectedProperty] = useState<SerializableProperty | null>(null);
+  // Delete modal state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<MockPropertyType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -172,85 +167,17 @@ function PropertiesPageContent({
 
   // CRUD handlers
   const handleCreateProperty = useCallback(() => {
-    setFormMode('create');
-    setSelectedProperty(null);
-    setIsFormModalOpen(true);
-  }, []);
+    router.push(`/${lang}/properties/new`);
+  }, [router, lang]);
 
   const handleEditProperty = useCallback((property: MockPropertyType) => {
-    const serializableProperty: SerializableProperty = {
-      id: property.id,
-      name: property.name,
-      description: property.name,
-      price: property.price,
-      currency: 'USD',
-      location: `${property.address}, ${property.city}`,
-      propertyType: property.propertyType as PropertyType || PropertyType.HOUSE,
-      area: property.area || 0,
-      areaUnit: property.areaUnit === 'sqft' ? AreaUnit.SQFT : AreaUnit.M2,
-      features: [],
-      images: property.image ? [property.image] : [],
-      status: PropertyStatus.AVAILABLE,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      bedrooms: property.bedrooms,
-      bathrooms: property.bathrooms,
-    };
-    setSelectedProperty(serializableProperty);
-    setFormMode('edit');
-    setIsFormModalOpen(true);
-  }, []);
+    router.push(`/${lang}/properties/${property.id}/edit`);
+  }, [router, lang]);
 
   const handleDeleteProperty = useCallback((property: MockPropertyType) => {
     setPropertyToDelete(property);
     setIsDeleteDialogOpen(true);
   }, []);
-
-  const handleFormSubmit = async (data: PropertyFormData) => {
-    try {
-      if (formMode === 'create') {
-        await dispatch(createProperty({
-          name: data.name,
-          description: `${data.name} located at ${data.address}, ${data.city}`,
-          price: data.price,
-          currency: 'USD',
-          location: `${data.address}, ${data.city}`,
-          propertyType: data.propertyType || 'house',
-          area: data.area || 0,
-          areaUnit: data.areaUnit === 'sqft' ? 'sqft' : 'm2',
-          features: [],
-          images: data.image ? [data.image] : [],
-          status: 'available',
-          bedrooms: data.bedrooms,
-          bathrooms: data.bathrooms,
-        })).unwrap();
-      } else if (selectedProperty) {
-        await dispatch(updateProperty({
-          id: selectedProperty.id,
-          data: {
-            name: data.name,
-            description: `${data.name} located at ${data.address}, ${data.city}`,
-            price: data.price,
-            currency: 'USD',
-            location: `${data.address}, ${data.city}`,
-            propertyType: data.propertyType || 'house',
-            area: data.area || 0,
-            areaUnit: data.areaUnit === 'sqft' ? 'sqft' : 'm2',
-            features: [],
-            images: data.image ? [data.image] : [],
-            status: 'available',
-            bedrooms: data.bedrooms,
-            bathrooms: data.bathrooms,
-          },
-        })).unwrap();
-      }
-      setIsFormModalOpen(false);
-      setSelectedProperty(null);
-    } catch (error) {
-      console.error('Failed to save property:', error);
-      throw error;
-    }
-  };
 
   const handleConfirmDelete = async () => {
     if (!propertyToDelete) return;
@@ -456,18 +383,7 @@ function PropertiesPageContent({
         </div>
       </footer>
 
-      {/* Modals */}
-      <PropertyFormModal
-        isOpen={isFormModalOpen}
-        onClose={() => {
-          setIsFormModalOpen(false);
-          setSelectedProperty(null);
-        }}
-        onSubmit={handleFormSubmit}
-        property={selectedProperty}
-        mode={formMode}
-      />
-
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
         title={dict.properties.deleteProperty}

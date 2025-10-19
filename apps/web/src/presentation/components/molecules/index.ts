@@ -18,3 +18,6 @@ export { LoadingState } from './LoadingState';
 export { Breadcrumbs } from './Breadcrumbs';
 export { ImageCarousel } from './ImageCarousel';
 export { LanguageSwitcher } from './LanguageSwitcher';
+export { ImageCard } from './ImageCard';
+export { Autocomplete } from './Autocomplete';
+export type { AutocompleteOption } from './Autocomplete';

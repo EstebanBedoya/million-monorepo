@@ -107,8 +107,9 @@
   "propertyForm": {
     "createTitle": "Crear Nueva Propiedad",
     "editTitle": "Editar Propiedad",
+    "basicInformation": "Información Básica",
     "name": "Nombre de la Propiedad",
-    "namePlaceholder": "Ingrese el nombre de la propiedad",
+    "namePlaceholder": "Villa Moderna con Piscina",
     "address": "Dirección",
     "addressPlaceholder": "Ingrese la dirección",
     "city": "Ciudad",
@@ -130,7 +131,26 @@
     "invalidPrice": "El precio debe ser mayor a 0",
     "invalidBedrooms": "Las habitaciones deben ser al menos 0",
     "invalidBathrooms": "Los baños deben ser al menos 0",
-    "invalidArea": "El área debe ser mayor a 0"
+    "invalidArea": "El área debe ser mayor a 0",
+    "codeInternal": "Código Interno",
+    "year": "Año de Construcción",
+    "owner": "Propietario",
+    "selectOwner": "Seleccionar Propietario",
+    "createNewOwner": "Crear Nuevo Propietario",
+    "images": "Imágenes",
+    "addImages": "Agregar Imágenes",
+    "searchImages": "Buscar imágenes en Unsplash",
+    "enableImage": "Habilitar imagen",
+    "disableImage": "Deshabilitar imagen",
+    "createError": "Error al crear la propiedad",
+    "updateError": "Error al actualizar la propiedad"
+  },
+  "ownerForm": {
+    "createTitle": "Crear Nuevo Propietario",
+    "name": "Nombre",
+    "address": "Dirección",
+    "photo": "URL de Foto",
+    "birthday": "Fecha de Nacimiento"
   },
   "notFound": {
     "title": "Propiedad No Encontrada",
@@ -143,7 +163,8 @@
     "network": "Error de red. Por favor, verifica tu conexión.",
     "notFound": "Recurso no encontrado.",
     "unauthorized": "No estás autorizado para realizar esta acción.",
-    "serverError": "Error del servidor. Por favor, inténtalo más tarde."
+    "server": "Error del servidor. Por favor, inténtalo más tarde.",
+    "validation": "Error de validación. Por favor, verifica tu información."
   },
   "pagination": {
     "page": "Página",

@@ -10,12 +10,10 @@ import { ArrowLeft, Edit2, Trash2, Calendar, DollarSign, MapPin, Home, User, His
 import { Badge } from '@/presentation/components/atoms/Badge';
 import { Price } from '@/presentation/components/atoms/Price';
 import { Image } from '@/presentation/components/atoms/Image';
-import { PropertyFormModal, PropertyFormData } from '@/presentation/components/organisms/PropertyFormModal';
 import { ConfirmDialog } from '@/presentation/components/atoms/ConfirmDialog';
 import { ImageCarousel } from '@/presentation/components/molecules/ImageCarousel';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { updateProperty, deleteProperty, fetchPropertyById, SerializableProperty } from '@/store/slices/propertySlice';
-import { PropertyType, AreaUnit } from '@/domain/entities/Property';
+import { deleteProperty, fetchPropertyById } from '@/store/slices/propertySlice';
 import { useDictionary, useLocale } from '@/i18n/client';
 
 export interface PropertyDetailPageProps {
@@ -35,10 +33,8 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
     error: state.properties.error
   }));
   
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<SerializableProperty | null>(null);
 
   useEffect(() => {
     // Use Redux action instead of direct fetch
@@ -51,65 +47,13 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
 
   const handleEdit = useCallback(() => {
     if (!property) return;
-
-    const serializableProperty: SerializableProperty = {
-      id: property.id,
-      name: property.name,
-      description: property.description,
-      price: property.price,
-      currency: property.currency,
-      location: property.location,
-      propertyType: property.propertyType as PropertyType || PropertyType.HOUSE,
-      area: property.area || 0,
-      areaUnit: property.areaUnit === 'sqft' ? AreaUnit.SQFT : AreaUnit.M2,
-      features: property.features,
-      images: property.images,
-      status: property.status,
-      createdAt: property.createdAt,
-      updatedAt: property.updatedAt,
-      bedrooms: property.bedrooms,
-      bathrooms: property.bathrooms,
-    };
-    
-    setSelectedProperty(serializableProperty);
-    setIsEditModalOpen(true);
-  }, [property]);
+    router.push(`/${lang}/properties/${property.id}/edit`);
+  }, [property, router, lang]);
 
   const handleDelete = useCallback(() => {
     setIsDeleteDialogOpen(true);
   }, []);
 
-  const handleFormSubmit = async (data: PropertyFormData) => {
-    if (!property) return;
-
-    try {
-      await dispatch(updateProperty({
-        id: property.id,
-        data: {
-          name: data.name,
-          description: `${data.name} located at ${data.address}`,
-          price: data.price,
-          currency: 'USD',
-          location: data.address,
-          propertyType: 'house',
-          area: 0,
-          areaUnit: 'm2',
-          features: [],
-          images: data.image ? [data.image] : [],
-          status: 'available',
-        },
-      })).unwrap();
-
-      // Refresh property data using Redux
-      dispatch(fetchPropertyById(id));
-
-      setIsEditModalOpen(false);
-      setSelectedProperty(null);
-    } catch (error) {
-      console.error('Failed to update property:', error);
-      throw error;
-    }
-  };
 
   const handleConfirmDelete = async () => {
     if (!property) return;
@@ -456,17 +400,6 @@ export const PropertyDetailPage = ({ id }: PropertyDetailPageProps) => {
       </div>
 
       {/* Modals */}
-      <PropertyFormModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedProperty(null);
-        }}
-        onSubmit={handleFormSubmit}
-        property={selectedProperty}
-        mode="edit"
-      />
-
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
         title={dict.properties.deleteProperty}

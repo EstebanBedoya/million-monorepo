@@ -31,6 +31,7 @@ public class CreatePropertyImageCommandHandler : IRequestHandler<CreatePropertyI
         }
 
         var image = _mapper.Map<PropertyImage>(request.ImageDto);
+        image.IdPropertyImage = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
         image.IdProperty = request.IdProperty;
         
         var createdImage = await _imageRepository.CreateAsync(image, cancellationToken);

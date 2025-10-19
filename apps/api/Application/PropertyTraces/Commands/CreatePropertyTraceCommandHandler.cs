@@ -31,6 +31,7 @@ public class CreatePropertyTraceCommandHandler : IRequestHandler<CreatePropertyT
         }
 
         var trace = _mapper.Map<PropertyTrace>(request.TraceDto);
+        trace.IdPropertyTrace = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
         trace.IdProperty = request.IdProperty;
         
         var createdTrace = await _traceRepository.CreateAsync(trace, cancellationToken);

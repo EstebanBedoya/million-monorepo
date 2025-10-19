@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Cinzel, Cairo } from "next/font/google";
 import "../globals.css";
 import { ReduxProvider } from "@/providers/ReduxProvider";
-import { ThemeToggle } from "@/presentation/components/molecules/ThemeToggle";
-import { LanguageSwitcher } from "@/presentation/components/molecules/LanguageSwitcher";
+import { Header } from "@/presentation/components/organisms/Header";
 import { i18n, type Locale } from '@/i18n';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { I18nProvider } from '@/i18n/client';
@@ -49,9 +48,8 @@ export default async function RootLayout({
       >
         <ReduxProvider>
           <I18nProvider lang={lang as Locale} dict={dict}>
+            <Header currentLang={lang as Locale} />
             {children}
-            <ThemeToggle />
-            <LanguageSwitcher currentLang={lang as Locale} />
           </I18nProvider>
         </ReduxProvider>
       </body>

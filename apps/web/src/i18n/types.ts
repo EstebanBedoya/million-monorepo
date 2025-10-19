@@ -107,6 +107,7 @@ export interface Dictionary {
   propertyForm: {
     createTitle: string;
     editTitle: string;
+    basicInformation: string;
     name: string;
     namePlaceholder: string;
     address: string;
@@ -131,6 +132,25 @@ export interface Dictionary {
     invalidBedrooms: string;
     invalidBathrooms: string;
     invalidArea: string;
+    codeInternal: string;
+    year: string;
+    owner: string;
+    selectOwner: string;
+    createNewOwner: string;
+    images: string;
+    addImages: string;
+    searchImages: string;
+    enableImage: string;
+    disableImage: string;
+    createError: string;
+    updateError: string;
+  };
+  ownerForm: {
+    createTitle: string;
+    name: string;
+    address: string;
+    photo: string;
+    birthday: string;
   };
   notFound: {
     title: string;
@@ -143,7 +163,8 @@ export interface Dictionary {
     network: string;
     notFound: string;
     unauthorized: string;
-    serverError: string;
+    server: string;
+    validation: string;
   };
   pagination: {
     page: string;
