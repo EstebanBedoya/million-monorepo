@@ -78,30 +78,113 @@ export function PropertyForm({
     }
   }, [initialData, initialImages]);
 
+  // Validation rules configuration
+  const validationRules: Record<string, { validate: (value: string | number) => boolean; message: string }> = {
+    name: {
+      validate: (value: string | number) => typeof value === 'string' && !value.trim(),
+      message: dict.propertyForm?.required || 'This field is required'
+    },
+    address: {
+      validate: (value: string | number) => typeof value === 'string' && !value.trim(),
+      message: dict.propertyForm?.required || 'This field is required'
+    },
+    price: {
+      validate: (value: string | number) => typeof value === 'number' && value <= 0,
+      message: dict.propertyForm?.invalidPrice || 'Price must be greater than 0'
+    },
+    codeInternal: {
+      validate: (value: string | number) => typeof value === 'string' && !value.trim(),
+      message: dict.propertyForm?.required || 'This field is required'
+    },
+    year: {
+      validate: (value: string | number) => typeof value === 'number' && (!value || value < 1800 || value > new Date().getFullYear() + 10),
+      message: `Year must be between 1800 and ${new Date().getFullYear() + 10}`
+    },
+    idOwner: {
+      validate: (value: string | number) => typeof value === 'string' && !value,
+      message: dict.propertyForm?.required || 'This field is required'
+    }
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = dict.propertyForm?.required || 'This field is required';
-    }
-    if (!formData.address.trim()) {
-      newErrors.address = dict.propertyForm?.required || 'This field is required';
-    }
-    if (formData.price <= 0) {
-      newErrors.price = dict.propertyForm?.invalidPrice || 'Price must be greater than 0';
-    }
-    if (!formData.codeInternal.trim()) {
-      newErrors.codeInternal = dict.propertyForm?.required || 'This field is required';
-    }
-    if (!formData.year || formData.year < 1800 || formData.year > new Date().getFullYear() + 10) {
-      newErrors.year = 'Year must be between 1800 and ' + (new Date().getFullYear() + 10);
-    }
-    if (!formData.idOwner) {
-      newErrors.idOwner = dict.propertyForm?.required || 'This field is required';
-    }
+    // Validate each field using the rules configuration
+    Object.entries(validationRules).forEach(([field, rule]) => {
+      const value = formData[field as keyof PropertyFormData];
+      if (rule.validate(value)) {
+        newErrors[field] = rule.message;
+      }
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Error message mapping for cleaner error handling
+  const getErrorMessage = (error: unknown): string => {
+    const errorMappings = {
+      ApiError: (apiError: ApiError) => {
+        const statusMessages = {
+          400: dict.errors?.validation || 'Validation error',
+          404: dict.errors?.notFound || 'Resource not found',
+          500: dict.errors?.server || 'Server error. Please try again later.',
+        };
+        
+        if (apiError.code === 'NETWORK_ERROR') {
+          return dict.errors?.network || 'Network error. Please check your connection.';
+        }
+        
+        return statusMessages[apiError.status as keyof typeof statusMessages] || 
+               apiError.message || 
+               dict.errors?.generic || 'An error occurred';
+      },
+      AxiosError: (axiosError: { response?: { data?: { error?: { message?: string } } } }) => {
+        const backendError = axiosError.response?.data?.error?.message;
+        return backendError || dict.errors?.generic || 'An error occurred';
+      },
+      Error: (err: Error) => err.message,
+      default: () => dict.errors?.generic || 'An error occurred'
+    };
+
+    if (error instanceof ApiError) {
+      return errorMappings.ApiError(error);
+    }
+    
+    if (error && typeof error === 'object' && 'response' in error) {
+      return errorMappings.AxiosError(error as { response?: { data?: { error?: { message?: string } } } });
+    }
+    
+    if (error instanceof Error) {
+      return errorMappings.Error(error);
+    }
+    
+    return errorMappings.default();
+  };
+
+  // Property operations mapping
+  const propertyOperations = {
+    create: () => propertyApiClient.createProperty({
+      name: formData.name,
+      address: formData.address,
+      price: formData.price,
+      codeInternal: formData.codeInternal,
+      year: formData.year,
+      idOwner: formData.idOwner,
+    }),
+    edit: () => {
+      if (!propertyId) {
+        throw new Error('Property ID is required for edit mode');
+      }
+      return propertyApiClient.updateProperty(propertyId, {
+        name: formData.name,
+        address: formData.address,
+        price: formData.price,
+        codeInternal: formData.codeInternal,
+        year: formData.year,
+        idOwner: formData.idOwner,
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,32 +197,16 @@ export function PropertyForm({
 
     setIsLoading(true);
     try {
-      let savedPropertyId: string;
-
-      if (mode === 'create') {
-        const createdProperty = await propertyApiClient.createProperty({
-          name: formData.name,
-          address: formData.address,
-          price: formData.price,
-          codeInternal: formData.codeInternal,
-          year: formData.year,
-          idOwner: formData.idOwner,
-        });
-        savedPropertyId = createdProperty.idProperty;
-      } else if (mode === 'edit' && propertyId) {
-        const updatedProperty = await propertyApiClient.updateProperty(propertyId, {
-          name: formData.name,
-          address: formData.address,
-          price: formData.price,
-          codeInternal: formData.codeInternal,
-          year: formData.year,
-          idOwner: formData.idOwner,
-        });
-        savedPropertyId = updatedProperty.idProperty;
-      } else {
-        throw new Error('Invalid mode or missing propertyId');
+      // Execute property operation based on mode
+      const propertyOperation = propertyOperations[mode];
+      if (!propertyOperation) {
+        throw new Error('Invalid mode');
       }
 
+      const savedProperty = await propertyOperation();
+      const savedPropertyId = savedProperty.idProperty;
+
+      // Handle images if any are selected
       if (selectedImages.length > 0) {
         const imagePromises = selectedImages.map(image =>
           createPropertyImageUseCase.execute({
@@ -159,35 +226,12 @@ export function PropertyForm({
     } catch (error) {
       console.error('Error saving property:', error);
       
-      let errorMessage = dict.errors?.generic || 'An error occurred';
+      const errorMessage = getErrorMessage(error);
+      const operationText = mode === 'create' 
+        ? dict.propertyForm?.createError || 'Failed to create property'
+        : dict.propertyForm?.updateError || 'Failed to update property';
       
-      if (error instanceof ApiError) {
-        if (error.status === 400) {
-          errorMessage = error.message || dict.errors?.validation || 'Validation error';
-        } else if (error.status === 404) {
-          errorMessage = dict.errors?.notFound || 'Resource not found';
-        } else if (error.status === 500) {
-          errorMessage = dict.errors?.server || 'Server error. Please try again later.';
-        } else if (error.code === 'NETWORK_ERROR') {
-          errorMessage = dict.errors?.network || 'Network error. Please check your connection.';
-        } else {
-          errorMessage = error.message;
-        }
-      } else if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response: { data?: { error?: { message?: string } } } };
-        const backendError = axiosError.response?.data?.error?.message;
-        if (backendError) {
-          errorMessage = backendError;
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      setSubmitError(
-        mode === 'create'
-          ? `${dict.propertyForm?.createError || 'Failed to create property'}: ${errorMessage}`
-          : `${dict.propertyForm?.updateError || 'Failed to update property'}: ${errorMessage}`
-      );
+      setSubmitError(`${operationText}: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

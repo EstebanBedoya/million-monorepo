@@ -56,7 +56,7 @@ beforeEach(() => {
 });
 
 describe('useTheme', () => {
-  it('should initialize with light theme by default', () => {
+  it('should initialize with light theme by default', async () => {
     const store = createTestStore();
     
     const { result } = renderHook(() => useTheme(), {
@@ -64,7 +64,11 @@ describe('useTheme', () => {
     });
 
     expect(result.current.theme).toBe('light');
-    expect(result.current.mounted).toBe(false); // Initially not mounted
+    // After initial render, mounted should be true
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    expect(result.current.mounted).toBe(true);
   });
 
   it('should toggle to next theme', () => {

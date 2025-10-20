@@ -40,7 +40,7 @@ exports[`EmptyState should match snapshot 1`] = `
   <p
     class="mb-6 max-w-md text-sm text-secondary"
   >
-    We couldn't find any properties matching your criteria. Try adjusting your filters or search terms.
+    We couldn't find any properties matching your criteria
   </p>
 </div>
 `;

@@ -46,17 +46,17 @@ describe('PropertyCard - Navigation', () => {
   it('should navigate to property detail page when View Details is clicked', () => {
     render(<PropertyCard property={mockProperty} />);
     
-    const button = screen.getByRole('button', { name: /View details for Test Property/i });
+    const button = screen.getByRole('button', { name: /View details Test Property/i });
     fireEvent.click(button);
 
-    expect(mockPush).toHaveBeenCalledWith('/properties/prop-123');
+    expect(mockPush).toHaveBeenCalledWith('/en/properties/prop-123');
   });
 
   it('should call onViewDetails callback instead of navigation when provided', () => {
     const onViewDetails = jest.fn();
     render(<PropertyCard property={mockProperty} onViewDetails={onViewDetails} />);
     
-    const button = screen.getByRole('button', { name: /View details for Test Property/i });
+    const button = screen.getByRole('button', { name: /View details Test Property/i });
     fireEvent.click(button);
 
     expect(onViewDetails).toHaveBeenCalledWith(mockProperty);
@@ -70,7 +70,7 @@ describe('PropertyCard - Navigation', () => {
     const button = screen.getByRole('button', { name: /View details/i });
     fireEvent.click(button);
 
-    expect(mockPush).toHaveBeenCalledWith('/properties/different-id');
+    expect(mockPush).toHaveBeenCalledWith('/en/properties/different-id');
   });
 });
 

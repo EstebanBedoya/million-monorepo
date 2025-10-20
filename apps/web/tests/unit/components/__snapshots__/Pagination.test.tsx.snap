@@ -43,7 +43,7 @@ exports[`Pagination should match snapshot 1`] = `
       <button
         aria-current="page"
         aria-label="Page 2"
-        class="inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed h-8 px-3 text-sm pointer-events-none"
+        class="inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-accent text-white hover:bg-accent/90 focus:ring-accent h-8 px-3 text-sm pointer-events-none"
       >
         2
       </button>

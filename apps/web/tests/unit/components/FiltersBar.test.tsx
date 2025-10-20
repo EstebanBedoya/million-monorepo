@@ -24,12 +24,12 @@ describe('FiltersBar', () => {
 
   it('should debounce search input', async () => {
     jest.useFakeTimers();
-    render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={false} />);
+    render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={true} />);
 
     const searchInput = screen.getByLabelText(/Search by name or address/i);
 
     // Type in search
-    await userEvent.type(searchInput, 'Villa');
+    fireEvent.change(searchInput, { target: { value: 'Villa' } });
 
     // Should not call immediately
     expect(mockOnFilterChange).not.toHaveBeenCalled();
@@ -44,17 +44,17 @@ describe('FiltersBar', () => {
           search: 'Villa',
         })
       );
-    }, { timeout: 1000 });
+    });
 
     jest.useRealTimers();
-  }, 10000);
+  });
 
   it('should update filters when property type changes', async () => {
-    render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={false} />);
+    render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={true} />);
 
     const propertyTypeSelect = screen.getByLabelText(/Filter by property type/i);
 
-    await userEvent.selectOptions(propertyTypeSelect, 'house');
+    fireEvent.change(propertyTypeSelect, { target: { value: 'house' } });
 
     // Wait for the effect to trigger onFilterChange
     await waitFor(() => {
@@ -63,22 +63,30 @@ describe('FiltersBar', () => {
           propertyType: 'house',
         })
       );
-    }, { timeout: 2000 });
+    });
   });
 
   it('should update min and max price inputs', async () => {
-    render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={false} />);
+    render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={true} />);
 
     const minPriceInput = screen.getByLabelText(/Min Price/i);
     const maxPriceInput = screen.getByLabelText(/Max Price/i);
 
     fireEvent.change(minPriceInput, { target: { value: '100000' } });
+    
+    await waitFor(() => {
+      expect(mockOnFilterChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          minPrice: 100000,
+        })
+      );
+    });
+
     fireEvent.change(maxPriceInput, { target: { value: '1000000' } });
 
     await waitFor(() => {
       expect(mockOnFilterChange).toHaveBeenCalledWith(
         expect.objectContaining({
-          minPrice: 100000,
           maxPrice: 1000000,
         })
       );
@@ -93,15 +101,15 @@ describe('FiltersBar', () => {
       propertyType: 'house',
     };
 
-    render(<FiltersBar onFilterChange={mockOnFilterChange} defaultFilters={defaultFilters} skipInitialCall={false} />);
+    render(<FiltersBar onFilterChange={mockOnFilterChange} defaultFilters={defaultFilters} skipInitialCall={true} />);
 
     // Wait for initial render and filters to be applied
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Clear All Filters/i })).toBeInTheDocument();
-    }, { timeout: 1000 });
+    });
 
     const clearButton = screen.getByRole('button', { name: /Clear All Filters/i });
-    await userEvent.click(clearButton);
+    fireEvent.click(clearButton);
 
     await waitFor(() => {
       expect(mockOnFilterChange).toHaveBeenCalledWith({
@@ -110,28 +118,28 @@ describe('FiltersBar', () => {
         maxPrice: 1000000000,
         propertyType: '',
       });
-    }, { timeout: 1000 });
+    });
   });
 
   it('should show clear filters button only when filters are active', async () => {
-    const { rerender } = render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={false} />);
+    // Test without filters
+    const { unmount } = render(<FiltersBar onFilterChange={mockOnFilterChange} skipInitialCall={true} />);
+    expect(screen.queryByRole('button', { name: /Clear all filters/i })).not.toBeInTheDocument();
+    unmount();
 
-    // No filters active, button should not be visible
-    expect(screen.queryByRole('button', { name: /Clear All Filters/i })).not.toBeInTheDocument();
-
-    // Add filters
-    rerender(
+    // Test with active filters
+    render(
       <FiltersBar
         onFilterChange={mockOnFilterChange}
-        defaultFilters={{ search: 'Test', minPrice: 100000, maxPrice: 500000000 }}
-        skipInitialCall={false}
+        defaultFilters={{ search: 'Test' }}
+        skipInitialCall={true}
       />
     );
 
-    // Button should now be visible
+    // Button should be visible with active filters
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Clear All Filters/i })).toBeInTheDocument();
-    }, { timeout: 1000 });
+      expect(screen.getByRole('button', { name: /Clear all filters/i })).toBeInTheDocument();
+    });
   });
 
   it('should display formatted price range', () => {
