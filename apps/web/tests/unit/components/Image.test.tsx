@@ -6,7 +6,9 @@ import { Image } from '@/presentation/components/atoms/Image';
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ src, alt, onError, ...props }: any) => {
+  default: ({ src, alt, onError, ...props }: { src: string; alt: string; onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void; [key: string]: unknown }) => {
+    // Using regular img in test mock is acceptable for testing purposes
+     
     return (
       <img
         src={src}

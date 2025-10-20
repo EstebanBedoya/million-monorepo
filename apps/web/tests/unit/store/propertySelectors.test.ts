@@ -27,7 +27,7 @@ describe('propertySelectors', () => {
     updatedAt: new Date().toISOString(),
   };
 
-  const createMockState = (propertyState: any): RootState =>
+  const createMockState = (propertyState: Partial<RootState['properties']>): RootState =>
     ({
       properties: {
         byId: {},
@@ -45,7 +45,12 @@ describe('propertySelectors', () => {
         },
         ...propertyState,
       },
-      ui: {} as any,
+      ui: {
+        theme: 'light',
+        sidebarOpen: false,
+        modalOpen: false,
+        notifications: [],
+      },
     } as RootState);
 
   describe('selectAllProperties', () => {

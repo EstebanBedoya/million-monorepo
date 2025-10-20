@@ -28,10 +28,7 @@ interface PropertiesPageProps {
 }
 
 // Internal component that uses search params
-function PropertiesPageContent({
-  initialProperties: _initialProperties = [],
-  initialPagination: _initialPagination
-}: PropertiesPageProps) {
+function PropertiesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -46,19 +43,12 @@ function PropertiesPageContent({
   
   // Redux hooks
   const {
-    filteredProperties: _filteredProperties,
     isLoading: loading,
     error,
     pagination,
-    currentFilter: _currentFilter,
-    searchFilters: _searchFilters,
     loadProperties,
-    loadAvailableProperties: _loadAvailableProperties,
-    loadExpensiveProperties: _loadExpensiveProperties,
-    changeFilter: _changeFilter,
     updateSearchFilters,
     clearFilters,
-    clearError: _clearError,
     isCacheValid,
     needsRefresh,
   } = usePropertiesRedux();
@@ -113,7 +103,7 @@ function PropertiesPageContent({
   }, [lang]);
 
   // Load properties using Redux (load all properties once)
-  const loadPropertiesData = useCallback(async (filterValues: FilterValues, _page: number) => {
+  const loadPropertiesData = useCallback(async () => {
     // Check if we need to refresh data
     if (!isCacheValid || needsRefresh) {
       await loadProperties({ 
@@ -202,12 +192,11 @@ function PropertiesPageContent({
   // Initial load from URL params
   useEffect(() => {
     const urlFilters = getFiltersFromURL();
-    const page = Number(searchParams.get('page')) || 1;
     
     setFilters(urlFilters);
     
     // Load properties first, then apply filters
-    loadPropertiesData(urlFilters, page).then(() => {
+    loadPropertiesData().then(() => {
       // Sync filters with Redux after properties are loaded
       updateSearchFilters({
         search: urlFilters.search,

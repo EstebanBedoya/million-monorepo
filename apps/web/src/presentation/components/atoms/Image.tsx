@@ -11,7 +11,6 @@ export interface ImageProps extends NextImageProps {
 
 export const Image = ({ 
   className, 
-  fallbackSrc: _fallbackSrc = '/placeholder-property.jpg',
   onError,
   src,
   alt,

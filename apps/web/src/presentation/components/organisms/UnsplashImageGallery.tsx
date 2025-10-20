@@ -49,10 +49,10 @@ export function UnsplashImageGallery({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    loadImages(searchTerm);
+    loadImages();
   }, []);
 
-  const loadImages = (query: string) => {
+  const loadImages = () => {
     setIsLoading(true);
     
     const baseImages = SAMPLE_IMAGES.map(
@@ -114,13 +114,13 @@ export function UnsplashImageGallery({
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                loadImages(searchTerm);
+                loadImages();
               }
             }}
           />
           <button
             type="button"
-            onClick={() => loadImages(searchTerm)}
+            onClick={() => loadImages()}
             className="px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors"
           >
             <Search className="w-5 h-5" />

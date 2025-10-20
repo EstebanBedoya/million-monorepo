@@ -13,10 +13,30 @@ import {
 import { RootState } from '@/store/index';
 
 describe('uiSelectors', () => {
-  const createMockState = (uiState: any): RootState =>
+  const createMockState = (uiState: Partial<RootState['ui']>): RootState =>
     ({
-      ui: uiState,
-      properties: {} as any,
+      ui: {
+        theme: 'light',
+        sidebarOpen: false,
+        modalOpen: false,
+        notifications: [],
+        ...uiState,
+      },
+      properties: {
+        byId: {},
+        allIds: [],
+        filteredIds: [],
+        selectedProperty: null,
+        loading: false,
+        error: null,
+        pagination: null,
+        filters: {
+          search: '',
+          propertyType: undefined,
+          minPrice: undefined,
+          maxPrice: undefined,
+        },
+      },
     } as RootState);
 
   describe('Basic selectors', () => {

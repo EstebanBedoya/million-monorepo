@@ -100,7 +100,7 @@ describe('useTheme', () => {
       writable: true,
     });
 
-    const { result } = renderHook(() => useTheme(), {
+    renderHook(() => useTheme(), {
       wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
     });
 
