@@ -479,7 +479,6 @@ services:
   - Performance: ≥ 90
   - Accessibility: ≥ 95
   - Best Practices: ≥ 90
-  - SEO: ≥ 90
 
 ## 🤝 Contribución
 
@@ -518,8 +517,3 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 Para soporte técnico o preguntas:
 - **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
 - **Documentación**: [Wiki del proyecto](https://github.com/your-repo/wiki)
-- **Email**: support@million-properties.com
-
----
-
-**Desarrollado con ❤️ usando Clean Architecture y las mejores prácticas de desarrollo moderno.**
