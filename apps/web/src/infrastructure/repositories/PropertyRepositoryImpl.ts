@@ -1,7 +1,7 @@
 import { PropertyRepository, PaginationOptions, PaginatedResult } from '@/domain/repositories/PropertyRepository';
 import { Property, PropertyType, PropertyStatus, AreaUnit } from '@/domain/entities/Property';
 import { PropertyApiClient } from '@/infrastructure/api/PropertyApiClient';
-import { PropertyDto } from '@/shared/contracts/property.dto';
+import { CreatePropertyDto, PropertyDto } from '@shared/contracts/property.dto';
 
 // Infrastructure implementation - handles data persistence with API
 export class PropertyRepositoryImpl implements PropertyRepository {
@@ -23,7 +23,8 @@ export class PropertyRepositoryImpl implements PropertyRepository {
 
   async findAll(): Promise<Property[]> {
     try {
-      const response = await this.apiClient.fetchProperties({}, { page: 1, limit: 1000 });
+      // Use reasonable limit for server-side pagination
+      const response = await this.apiClient.fetchProperties({}, { page: 1, limit: 100 });
       return response.properties.map(dto => this.mapDtoToEntity(dto));
     } catch (error) {
       console.error('Error fetching all properties:', error);
@@ -33,7 +34,8 @@ export class PropertyRepositoryImpl implements PropertyRepository {
 
   async findByStatus(status: string): Promise<Property[]> {
     try {
-      const response = await this.apiClient.fetchProperties({ status }, { page: 1, limit: 1000 });
+      // Use reasonable limit for server-side pagination
+      const response = await this.apiClient.fetchProperties({ status }, { page: 1, limit: 100 });
       return response.properties.map(dto => this.mapDtoToEntity(dto));
     } catch (error) {
       console.error('Error fetching properties by status:', error);
@@ -43,9 +45,10 @@ export class PropertyRepositoryImpl implements PropertyRepository {
 
   async findByPriceRange(minPrice: number, maxPrice: number): Promise<Property[]> {
     try {
+      // Use reasonable limit for server-side pagination
       const response = await this.apiClient.fetchProperties(
         { minPrice, maxPrice }, 
-        { page: 1, limit: 1000 }
+        { page: 1, limit: 100 }
       );
       return response.properties.map(dto => this.mapDtoToEntity(dto));
     } catch (error) {
@@ -84,7 +87,7 @@ export class PropertyRepositoryImpl implements PropertyRepository {
   async save(property: Property): Promise<Property> {
     try {
       const propertyDto = this.mapEntityToDto(property);
-      const savedDto = await this.apiClient.createProperty(propertyDto);
+      const savedDto = await this.apiClient.createProperty(propertyDto as unknown as CreatePropertyDto);
       return this.mapDtoToEntity(savedDto);
     } catch (error) {
       console.error('Error saving property:', error);

@@ -48,7 +48,7 @@ export class Container {
   private initializeServices(): void {
     // Get configuration from environment variables
     const httpConfig: HttpClientConfig = {
-      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api',
+      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL as string,
       timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000'),
       retries: parseInt(process.env.NEXT_PUBLIC_MAX_RETRIES || '3'),
       retryDelay: 1000, // 1 second

@@ -5,6 +5,8 @@ import { PropertyApiClient } from '@/infrastructure/api/PropertyApiClient';
 import { PropertyImageApiClient } from '@/infrastructure/api/PropertyImageApiClient';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PropertyImageDto } from '@/infrastructure/api/PropertyImageApiClient';
+import { Locale } from '@/i18n/config';
 
 interface EditPropertyPageProps {
   params: Promise<{
@@ -15,7 +17,7 @@ interface EditPropertyPageProps {
 
 export default async function EditPropertyPage({ params }: EditPropertyPageProps) {
   const { lang, id } = await params;
-  const dict = await getDictionary(lang);
+  const dict = await getDictionary(lang as Locale);
 
   const httpClient = new HttpClient({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
@@ -28,17 +30,14 @@ export default async function EditPropertyPage({ params }: EditPropertyPageProps
   const propertyImageApiClient = new PropertyImageApiClient(httpClient);
 
   let property;
-  let images;
+  let images: PropertyImageDto[] = [];
 
   try {
     property = await propertyApiClient.fetchPropertyById(id);
     
     try {
       const imagesResponse = await propertyImageApiClient.fetchPropertyImages(id);
-      images = imagesResponse.images.map((img) => ({
-        url: img.file,
-        enabled: img.enabled,
-      }));
+      images = imagesResponse.images;
     } catch (error) {
       console.error('Error loading images:', error);
       images = [];
@@ -93,7 +92,10 @@ export default async function EditPropertyPage({ params }: EditPropertyPageProps
           mode="edit"
           propertyId={id}
           initialData={initialData}
-          initialImages={images}
+          initialImages={images.map((img) => ({
+            url: img.file,
+            enabled: img.enabled,
+          }))}
         />
       </div>
     </div>

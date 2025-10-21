@@ -3,7 +3,7 @@
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
-import { useDictionary } from '../../../i18n/client';
+import { useDictionary } from '@/i18n/client';
 
 export interface ErrorStateProps {
   error: Error | string | null;
@@ -22,14 +22,14 @@ export function ErrorState({
   const isTimeoutError = errorMessage?.includes('timeout');
 
   const getErrorTitle = () => {
-    if (isTimeoutError) return dict.errors.serverError;
+    if (isTimeoutError) return dict.errors.server;
     if (isNetworkError) return dict.errors.network;
     return dict.errors.generic;
   };
 
   const getErrorMessage = () => {
     if (isTimeoutError) {
-      return dict.errors.serverError;
+      return dict.errors.server;
     }
     if (isNetworkError) {
       return dict.errors.network;

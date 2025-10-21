@@ -11,23 +11,12 @@ import { FilterValues } from '@/presentation/components/organisms/FiltersBar';
 import { ConfirmDialog } from '@/presentation/components/atoms/ConfirmDialog';
 import { usePropertiesRedux } from '@/presentation/hooks/usePropertiesRedux';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { selectPaginatedProperties, selectFilteredPagination } from '@/store/selectors/propertySelectors';
+import { selectFilteredProperties } from '@/store/selectors/propertySelectors';
 import { deleteProperty } from '@/store/slices/propertySlice';
 import { useDictionary, useLocale } from '@/i18n/client';
 
-interface PropertiesPageProps {
-  initialProperties?: MockPropertyType[];
-  initialPagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
+const LIMIT_PAGINATION = 12;
 
-// Internal component that uses search params
 function PropertiesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,12 +25,12 @@ function PropertiesPageContent() {
   const lang = useLocale();
   const [mounted, setMounted] = useState(false);
 
-  // Handle client-side mounting
   useEffect(() => {
     setMounted(true);
   }, []);
   
-  // Redux hooks
+  const limit = LIMIT_PAGINATION;
+
   const {
     isLoading: loading,
     error,
@@ -49,8 +38,6 @@ function PropertiesPageContent() {
     loadProperties,
     updateSearchFilters,
     clearFilters,
-    isCacheValid,
-    needsRefresh,
   } = usePropertiesRedux();
 
   // Local state (UI only)
@@ -63,14 +50,12 @@ function PropertiesPageContent() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Get filters from URL
-  const getFiltersFromURL = useCallback((): FilterValues => {
-    return {
+  const getFiltersFromURL = useCallback((): FilterValues => ({
       search: searchParams.get('search') || '',
       minPrice: Number(searchParams.get('minPrice')) || 0,
       maxPrice: Number(searchParams.get('maxPrice')) || 1000000000,
       propertyType: searchParams.get('propertyType') || '',
-    };
-  }, [searchParams]);
+    }), [searchParams]);
 
   const [filters, setFilters] = useState<FilterValues>(getFiltersFromURL());
 
@@ -102,19 +87,17 @@ function PropertiesPageContent() {
     routerRef.current.push(url, { scroll: false });
   }, [lang]);
 
-  // Load properties using Redux (load all properties once)
-  const loadPropertiesData = useCallback(async () => {
-    // Check if we need to refresh data
-    if (!isCacheValid || needsRefresh) {
-      await loadProperties({ 
-        page: 1, // Always load from page 1 to get all properties
-        limit: 1000 // Load a large number to get all properties
-      });
-    }
-  }, [loadProperties, isCacheValid, needsRefresh]);
+  // Load properties using Redux (server-side pagination)
+  const loadPropertiesData = useCallback(async (page: number, limit: number) => {
+    // Always load data for the requested page (server-side pagination)
+    await loadProperties({ 
+      page, 
+      limit 
+    }, true); // Force load to ensure we fetch from server
+  }, [loadProperties]);
 
   // Handle filter changes
-  const handleFilterChange = useCallback((newFilters: FilterValues) => {
+  const handleFilterChange = useCallback(async (newFilters: FilterValues) => {
     setFilters(newFilters);
     updateURL(newFilters, 1);
     
@@ -125,23 +108,34 @@ function PropertiesPageContent() {
       maxPrice: newFilters.maxPrice,
       propertyType: newFilters.propertyType || '',
     });
-  }, [updateSearchFilters, updateURL]);
+    
+    // Reload data from page 1 with new filters
+    try {
+      await loadPropertiesData(1, limit);
+    } catch (error) {
+      console.error('Error loading properties with filters:', error);
+    }
+  }, [updateSearchFilters, updateURL, loadPropertiesData, limit]);
 
   // Handle page changes
-  const handlePageChange = useCallback((page: number) => {
+  const handlePageChange = useCallback(async (page: number) => {
     setIsChangingPage(true);
     updateURL(filtersRef.current, page);
-    // No need to reload data, just update URL for client-side pagination
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    // Reset changing page state after a short delay to show smooth transition
-    setTimeout(() => {
+    // Load data for the new page (server-side pagination)
+    try {
+      await loadPropertiesData(page, limit);
+    } catch (error) {
+      console.error('Error loading properties:', error);
+    } finally {
       setIsChangingPage(false);
-    }, 300);
-  }, [updateURL]);
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [updateURL, loadPropertiesData, limit]);
 
   // Handle clear filters
-  const handleClearFilters = useCallback(() => {
+  const handleClearFilters = useCallback(async () => {
     const defaultFilters: FilterValues = {
       search: '',
       minPrice: 0,
@@ -153,7 +147,14 @@ function PropertiesPageContent() {
     
     // Clear Redux filters
     clearFilters();
-  }, [clearFilters, updateURL]);
+    
+    // Reload data from page 1 without filters
+    try {
+      await loadPropertiesData(1, limit);
+    } catch (error) {
+      console.error('Error loading properties after clearing filters:', error);
+    }
+  }, [clearFilters, updateURL, loadPropertiesData, limit]);
 
   // CRUD handlers
   const handleCreateProperty = useCallback(() => {
@@ -192,11 +193,12 @@ function PropertiesPageContent() {
   // Initial load from URL params
   useEffect(() => {
     const urlFilters = getFiltersFromURL();
+    const page = Number(searchParams.get('page')) || 1;
     
     setFilters(urlFilters);
     
-    // Load properties first, then apply filters
-    loadPropertiesData().then(() => {
+    // Load properties for the current page with filters
+    loadPropertiesData(page, limit).then(() => {
       // Sync filters with Redux after properties are loaded
       updateSearchFilters({
         search: urlFilters.search,
@@ -209,13 +211,11 @@ function PropertiesPageContent() {
   }, []); // Only run on mount
 
 
-  // Get current page from URL
-  const currentPage = Number(searchParams.get('page')) || 1;
-  const limit = 12;
-
-  // Use client-side pagination for filtered properties
-  const paginatedProperties = useAppSelector(selectPaginatedProperties(currentPage, limit));
-  const filteredPagination = useAppSelector(selectFilteredPagination(currentPage, limit));
+  // Use server-side pagination - properties are already paginated from the server
+  const paginatedProperties = useAppSelector(selectFilteredProperties);
+  
+  // Use pagination info directly from server response
+  const serverPagination = pagination;
 
   const displayedProperties = useMemo(() => {
     // Map PropertyType enum to MockPropertyType string
@@ -310,10 +310,10 @@ function PropertiesPageContent() {
             {!loading && mounted && (
               <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <p className="text-sm text-secondary">
-                  {filteredPagination && filteredPagination.total > 0 ? (
+                  {serverPagination && serverPagination.total > 0 ? (
                     <>
                       {dict.properties.showing} <span className="font-medium text-foreground">{displayedProperties.length}</span> {dict.properties.of}{' '}
-                      <span className="font-medium text-foreground">{filteredPagination.total}</span> {dict.properties.properties}
+                      <span className="font-medium text-foreground">{serverPagination.total}</span> {dict.properties.properties}
                     </>
                   ) : (
                     dict.properties.noProperties
@@ -347,14 +347,14 @@ function PropertiesPageContent() {
             {loading || isChangingPage ? (
               <PaginationSkeleton />
             ) : (
-              mounted && displayedProperties.length > 0 && filteredPagination && (
+              mounted && displayedProperties.length > 0 && serverPagination && (
                 <div className="mt-8">
                   <Pagination
-                    currentPage={filteredPagination.page}
-                    totalPages={filteredPagination.totalPages}
+                    currentPage={serverPagination.page}
+                    totalPages={serverPagination.totalPages}
                     onPageChange={handlePageChange}
-                    hasNext={filteredPagination.hasNext}
-                    hasPrev={filteredPagination.hasPrev}
+                    hasNext={serverPagination.hasNext}
+                    hasPrev={serverPagination.hasPrev}
                   />
                 </div>
               )
@@ -389,10 +389,10 @@ function PropertiesPageContent() {
 }
 
 // Wrapper component with Suspense boundary for useSearchParams
-export function PropertiesPage(props: PropertiesPageProps) {
+export function PropertiesPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <PropertiesPageContent {...props} />
+      <PropertiesPageContent />
     </Suspense>
   );
 }

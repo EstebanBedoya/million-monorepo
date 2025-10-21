@@ -1,4 +1,4 @@
-import { PropertyDto, CreatePropertyDto, UpdatePropertyDto } from '@/shared/contracts/property.dto';
+import { PropertyDto, CreatePropertyDto, UpdatePropertyDto } from '@shared/contracts/property.dto';
 import { HttpClient, RequestConfig } from '@/infrastructure/http/HttpClient';
 
 export interface PropertyApiFilters {

@@ -67,9 +67,9 @@ export function PropertyList({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {properties.map((property) => (
+      {properties.map((property, index) => (
         <PropertyCard
-          key={property.id}
+          key={`property-${property.id}-${index}`}
           property={property}
           onViewDetails={onPropertyClick}
           onEdit={onPropertyEdit}

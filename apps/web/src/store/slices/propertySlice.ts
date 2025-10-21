@@ -384,11 +384,12 @@ const propertySlice = createSlice({
           newAllIds.push(property.id);
         });
         
-        // Update normalized state
-        state.byId = { ...state.byId, ...newById };
-        state.allIds = [...new Set([...state.allIds, ...newAllIds])]; // Avoid duplicates
+        // Server-side pagination: Replace properties instead of accumulating them
+        // This ensures we only have the current page's data
+        state.byId = newById;
+        state.allIds = newAllIds;
         
-        // Apply all filters
+        // Apply all filters (for client-side filtering on top of server results)
         applyFilters(state);
         
         state.pagination = action.payload.pagination;

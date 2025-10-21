@@ -55,14 +55,17 @@ export function usePropertiesRedux() {
   const stats = useAppSelector(selectPropertyStats);
 
   // Actions
-  const loadProperties = useCallback((options: { page?: number; limit?: number } = {}) => {
-    // Check cache validity before making request
-    if (isCacheValid && !needsRefresh) {
+  const loadProperties = useCallback((options: { page?: number; limit?: number } = {}, forceLoad = false) => {
+    // For server-side pagination, always load when page changes or forceLoad is true
+    // Cache is only used to prevent redundant loads on same page
+    if (!forceLoad && isCacheValid && !needsRefresh && 
+        pagination?.page === options.page && 
+        pagination?.limit === options.limit) {
       return Promise.resolve();
     }
     
     return dispatch(fetchProperties(options)).unwrap();
-  }, [dispatch, isCacheValid, needsRefresh]);
+  }, [dispatch, isCacheValid, needsRefresh, pagination]);
 
   const loadAvailableProperties = useCallback(() => {
     if (isCacheValid && !needsRefresh && currentFilter === 'available') {

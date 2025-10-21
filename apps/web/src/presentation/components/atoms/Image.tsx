@@ -14,6 +14,7 @@ export const Image = ({
   onError,
   src,
   alt,
+  fallbackSrc,
   ...props 
 }: ImageProps) => {
   const [hasError, setHasError] = useState(false);

@@ -90,7 +90,7 @@ export class PropertyImageApiClient {
       skipLogging: false,
     };
 
-    await this.httpClient.delete(`properties/${propertyId}/images/${imageId}`, config);
+    await this.httpClient.delete(`/properties/${propertyId}/images/${imageId}`, config);
   }
 }
 

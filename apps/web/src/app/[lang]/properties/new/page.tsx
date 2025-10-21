@@ -1,5 +1,6 @@
 import { PropertyForm } from '@/presentation/components/organisms/PropertyForm';
 import { getDictionary } from '@/i18n/get-dictionary';
+import { Locale } from '@/i18n/config';
 import Link from 'next/link';
 
 interface NewPropertyPageProps {
@@ -10,7 +11,7 @@ interface NewPropertyPageProps {
 
 export default async function NewPropertyPage({ params }: NewPropertyPageProps) {
   const { lang } = await params;
-  const dict = await getDictionary(lang);
+  const dict = await getDictionary(lang as Locale);
 
   return (
     <div className="min-h-screen bg-background">
